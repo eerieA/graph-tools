@@ -1,124 +1,17 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>Dialogue Graph</title>
-    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
-    <script src="https://unpkg.com/cytoscape-dagre/cytoscape-dagre.js"></script>
-    <script src="https://unpkg.com/compromise@13.11.3/builds/compromise.min.js"></script>
-    <style>
-        #cy {
-            width: 100%;
-            height: 100vh;
-            display: block;
-        }
-    </style>
+  <title>Dialogue Graph</title>
+  <style>
+    #cy {
+      width: 100%;
+      height: 100vh;
+      display: block;
+    }
+  </style>
 </head>
-
 <body>
-    <div id="cy"></div>
-    <script>
-        function extractContentfulSnippet(text) {
-            const doc = nlp(text);
-            let phrases = [];
-
-            // 1. Try: Verb + Noun Phrase (direct object style)
-            doc.match('#Verb #Adverb? #Determiner? #Adjective* #Noun+').forEach(m => {
-                // Skip filler verbs like "be", "do", "say", "mention"
-                const verb = m.match('#Verb').out('normal');
-                if (!['be', 'do', 'say', 'mention', 'tell', 'ask'].includes(verb)) {
-                    phrases.push(m.out('text'));
-                }
-            });
-
-            // 2. If nothing, try just noun chunks
-            if (phrases.length === 0) {
-                phrases = doc.nouns().out('array');
-            }
-
-            // 3. If still nothing, fallback to any term
-            if (phrases.length === 0) {
-                phrases = doc.terms().out('array');
-            }
-
-            return phrases.slice(0, 2).join(" ");
-        }
-
-        cytoscape.use(cytoscapeDagre);
-
-        fetch("luka_session_01.json")
-            .then(res => res.json())
-            .then(data => {
-                const elements = [];
-
-                for (const [id, node] of Object.entries(data)) {
-                    // Add the node
-                    elements.push({
-                        // push a node ele to the graph, with label read from a property of the node data
-                        data: { id, label: `${node.ID}` }
-                    });
-
-                    // Add edges for Choices
-                    if (node.Choices) {
-                        for (const choice of node.Choices) {
-                            const choiceTextSnippet = extractContentfulSnippet(choice.Text);
-                            console.log("before:", choice.Text);
-                            console.log("after:", choiceTextSnippet);
-                            const requirementSnippet = choice.Requirements.length > 0 ? choice.Requirements[0] : "";
-                            const edgeLabel = requirementSnippet ? `${requirementSnippet} | ${choiceTextSnippet}` : choiceTextSnippet;
-
-                            if (choice.NextNodeID) {
-                                elements.push({
-                                    data: {
-                                        source: id,
-                                        target: choice.NextNodeID,
-                                        label: edgeLabel,
-                                        type: "choice"
-                                    }
-                                });
-                            }
-
-                            if (choice.FailureNodeID) {
-                                elements.push({
-                                    data: {
-                                        source: id,
-                                        target: choice.FailureNodeID,
-                                        label: "(fail)",
-                                        type: "failure"
-                                    }
-                                });
-                            }
-                        }
-                    }
-
-                    // Add edge for NextNodeID (auto-advance)
-                    if (node.NextNodeID) {
-                        elements.push({
-                            data: { source: id, target: node.NextNodeID, label: "", type: "flow" }
-                        });
-                    }
-                }
-
-                // Render Cytoscape
-                cytoscape({
-                    container: document.getElementById("cy"),
-                    elements,
-                    style: [
-                        { selector: "node", style: { "label": "data(label)", "background-color": "#4a90e2" } },
-                        { selector: "edge", style: { "label": "data(label)", "curve-style": "bezier", "target-arrow-shape": "triangle" } },
-                        { selector: "edge[type='failure']", style: { "line-color": "red", "target-arrow-color": "red", "line-style": "dashed" } },
-                        { selector: "edge[type='choice']", style: { "line-color": "gray", "target-arrow-color": "gray", "line-style": "dashed" } }
-                    ],
-                    layout: {
-                        name: "dagre",
-                        rankDir: "TB",
-                        nodeSep: 50,
-                        rankSep: 100
-                    }
-                });
-            });
-    </script>
+  <div id="cy"></div>
+  <script type="module" src="/src/main.js"></script>
 </body>
-
 </html>

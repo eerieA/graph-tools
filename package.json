@@ -1,0 +1,21 @@
+{
+  "name": "sp-graph-tool",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cytoscape": "^3.33.1",
+    "cytoscape-dagre": "^2.5.0",
+    "keyword-extractor": "^0.0.28"
+  },
+  "devDependencies": {
+    "vite": "^7.1.2"
+  }
+}
