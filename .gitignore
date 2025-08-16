@@ -1,6 +1,12 @@
 # Node.js
 node_modules/
 
+# Built files
+/dist/*
+# But white-list some files, **/*.bat means all bat files, *.bat is bat files directly under
+# !/dist/**/*.bat
+!/dist/*.bat
+
 # Logs
 logs/
 *.log
@@ -12,10 +18,8 @@ pids/
 *.seed
 *.pid.lock
 
-# Optional npm cache directory
+# Caches
 .npm/
-
-# Optional eslint cache
 .eslintcache
 
 # Optional REPL history
@@ -23,6 +27,7 @@ pids/
 
 # Environment variables
 .env*
+
 
 # Dialogue nodes in json format
 assets/*.json
