@@ -19,6 +19,32 @@
 <body>
     <div id="cy"></div>
     <script>
+        function extractContentfulSnippet(text) {
+            const doc = nlp(text);
+            let phrases = [];
+
+            // 1. Try: Verb + Noun Phrase (direct object style)
+            doc.match('#Verb #Adverb? #Determiner? #Adjective* #Noun+').forEach(m => {
+                // Skip filler verbs like "be", "do", "say", "mention"
+                const verb = m.match('#Verb').out('normal');
+                if (!['be', 'do', 'say', 'mention', 'tell', 'ask'].includes(verb)) {
+                    phrases.push(m.out('text'));
+                }
+            });
+
+            // 2. If nothing, try just noun chunks
+            if (phrases.length === 0) {
+                phrases = doc.nouns().out('array');
+            }
+
+            // 3. If still nothing, fallback to any term
+            if (phrases.length === 0) {
+                phrases = doc.terms().out('array');
+            }
+
+            return phrases.slice(0, 2).join(" ");
+        }
+
         cytoscape.use(cytoscapeDagre);
 
         fetch("luka_session_01.json")
@@ -36,37 +62,13 @@
                     // Add edges for Choices
                     if (node.Choices) {
                         for (const choice of node.Choices) {
-                            const choiceTextNLP = nlp(choice.Text);
-                            let phrases = [];
-
-                            // Extract verb + noun chunks
-                            choiceTextNLP.verbs().out('array').forEach(verb => {
-                                const chunk = nlp(verb).match('#Verb #Determiner? #Noun+');
-                                if (chunk.found) {
-                                    phrases.push(chunk.out('text'));
-                                }
-                            });
-
-                            // Fallback to nouns if no verb chunks found
-                            if (phrases.length === 0) {
-                                phrases = choiceTextNLP.nouns().out('array');
-                            }
-
-                            const choiceTextSnippet = phrases.slice(0, 2).join(" ");
+                            const choiceTextSnippet = extractContentfulSnippet(choice.Text);
                             console.log("before:", choice.Text);
                             console.log("after:", choiceTextSnippet);
                             const requirementSnippet = choice.Requirements.length > 0 ? choice.Requirements[0] : "";
                             const edgeLabel = requirementSnippet ? `${requirementSnippet} | ${choiceTextSnippet}` : choiceTextSnippet;
 
                             if (choice.NextNodeID) {
-                                /* elements.push({
-                                    data: {
-                                        source: id,
-                                        target: choice.NextNodeID,
-                                        label: choice.Text,
-                                        type: "choice"
-                                    }
-                                }); */
                                 elements.push({
                                     data: {
                                         source: id,
