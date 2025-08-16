@@ -1,17 +1,85 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Dialogue Graph</title>
-  <style>
-    #cy {
-      width: 100%;
-      height: 100vh;
-      display: block;
-    }
-  </style>
+    <meta charset="utf-8" />
+    <title>Dialogue Graph</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        #toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            align-items: center;
+            background: #f6f7f9;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        #toolbar input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 6px;
+        }
+
+        #toolbar button {
+            padding: 6px 10px;
+        }
+
+        #dropzone {
+            border: 2px dashed #d0d5da;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            color: #6b7280;
+            margin-left: 8px;
+            min-width: 240px;
+        }
+
+        #network {
+            width: 100%;
+            height: calc(100vh - 54px);
+            /* account for toolbar height */
+            display: block;
+        }
+
+        .error {
+            color: #b91c1c;
+            margin-left: 8px;
+        }
+
+        .info {
+            color: #374151;
+            margin-left: 8px;
+        }
+    </style>
 </head>
+
 <body>
-  <div id="network" style="width: 100%; height: 100vh;"></div>
-  <script type="module" src="/src/main.js"></script>
+    <div id="toolbar">
+        <label>
+            Local JSON
+            <input id="fileInput" type="file" accept=".json" style="margin-left:8px" />
+        </label>
+
+        <!-- Remote json option. We don't need this now -->
+        <!-- <label style="display:flex; align-items:center; width:100%;">
+            Remote URL
+            <input id="urlInput" type="text" placeholder="https://example.com/session.json" />
+        </label>
+        <button id="loadUrlBtn">Load URL</button> -->
+
+        <div id="dropzone">or drag & drop a file here</div>
+
+        <div id="status" class="info"></div>
+    </div>
+
+    <div id="network"></div>
+
+    <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>
