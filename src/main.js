@@ -82,11 +82,9 @@ fetch("assets/luka_session_01.json")
 
             if (node.Choices) {
                 for (const choice of node.Choices) {
-                    const snippet = extractContentfulSnippet(choice.Text);
-                    console.log("before:", choice.Text);
-                    console.log("after:", snippet);
+                    const choiceTextSnippet = extractContentfulSnippet(choice.Text);
                     const requirement = choice.Requirements.length ? choice.Requirements[0] : "";
-                    const edgeLabel = requirement ? `${snippet}\n${requirement}` : snippet;
+                    const edgeLabel = requirement ? `${choiceTextSnippet}\n${requirement}` : choiceTextSnippet;
 
                     if (choice.NextNodeID) {
                         edges.push({

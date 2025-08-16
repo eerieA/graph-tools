@@ -11,8 +11,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "cytoscape": "^3.33.1",
-    "cytoscape-dagre": "^2.5.0",
     "keyword-extractor": "^0.0.28",
     "vis-network": "^10.0.1"
   },
