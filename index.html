@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dialogue Graph</title>
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-dagre/cytoscape-dagre.js"></script>
+    <script src="https://unpkg.com/compromise@13.11.3/builds/compromise.min.js"></script>
+    <style>
+        #cy {
+            width: 100%;
+            height: 100vh;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cy"></div>
+    <script>
+        cytoscape.use(cytoscapeDagre);
+
+        fetch("luka_session_01.json")
+            .then(res => res.json())
+            .then(data => {
+                const elements = [];
+
+                for (const [id, node] of Object.entries(data)) {
+                    // Add the node
+                    elements.push({
+                        // push a node ele to the graph, with label read from a property of the node data
+                        data: { id, label: `${node.ID}` }
+                    });
+
+                    // Add edges for Choices
+                    if (node.Choices) {
+                        for (const choice of node.Choices) {
+                            const choiceTextNLP = nlp(choice.Text);
+                            let phrases = [];
+
+                            // Extract verb + noun chunks
+                            choiceTextNLP.verbs().out('array').forEach(verb => {
+                                const chunk = nlp(verb).match('#Verb #Determiner? #Noun+');
+                                if (chunk.found) {
+                                    phrases.push(chunk.out('text'));
+                                }
+                            });
+
+                            // Fallback to nouns if no verb chunks found
+                            if (phrases.length === 0) {
+                                phrases = choiceTextNLP.nouns().out('array');
+                            }
+
+                            const choiceTextSnippet = phrases.slice(0, 2).join(" ");
+                            console.log("before:", choice.Text);
+                            console.log("after:", choiceTextSnippet);
+                            const requirementSnippet = choice.Requirements.length > 0 ? choice.Requirements[0] : "";
+                            const edgeLabel = requirementSnippet ? `${requirementSnippet} | ${choiceTextSnippet}` : choiceTextSnippet;
+
+                            if (choice.NextNodeID) {
+                                /* elements.push({
+                                    data: {
+                                        source: id,
+                                        target: choice.NextNodeID,
+                                        label: choice.Text,
+                                        type: "choice"
+                                    }
+                                }); */
+                                elements.push({
+                                    data: {
+                                        source: id,
+                                        target: choice.NextNodeID,
+                                        label: edgeLabel,
+                                        type: "choice"
+                                    }
+                                });
+                            }
+
+                            if (choice.FailureNodeID) {
+                                elements.push({
+                                    data: {
+                                        source: id,
+                                        target: choice.FailureNodeID,
+                                        label: "(fail)",
+                                        type: "failure"
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    // Add edge for NextNodeID (auto-advance)
+                    if (node.NextNodeID) {
+                        elements.push({
+                            data: { source: id, target: node.NextNodeID, label: "", type: "flow" }
+                        });
+                    }
+                }
+
+                // Render Cytoscape
+                cytoscape({
+                    container: document.getElementById("cy"),
+                    elements,
+                    style: [
+                        { selector: "node", style: { "label": "data(label)", "background-color": "#4a90e2" } },
+                        { selector: "edge", style: { "label": "data(label)", "curve-style": "bezier", "target-arrow-shape": "triangle" } },
+                        { selector: "edge[type='failure']", style: { "line-color": "red", "target-arrow-color": "red", "line-style": "dashed" } },
+                        { selector: "edge[type='choice']", style: { "line-color": "gray", "target-arrow-color": "gray", "line-style": "dashed" } }
+                    ],
+                    layout: {
+                        name: "dagre",
+                        rankDir: "TB",
+                        nodeSep: 50,
+                        rankSep: 100
+                    }
+                });
+            });
+    </script>
+</body>
+
+</html>
