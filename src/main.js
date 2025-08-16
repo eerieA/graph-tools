@@ -1,8 +1,5 @@
-import cytoscape from "cytoscape";
-import dagre from "cytoscape-dagre";
+import { Network } from "vis-network";
 import keywordExtractor from "keyword-extractor";
-
-cytoscape.use(dagre);
 
 function extractContentfulSnippet(text, maxKeywords = 3) {
     if (!text || typeof text !== "string") return "";
@@ -26,76 +23,122 @@ function extractContentfulSnippet(text, maxKeywords = 3) {
     return snippet;
 }
 
+// handle parallel edges, fan them out by applying curvedCW and CCW
+// Otherwise vis-network will draw multiple edges between the same node pair on top of each other bcz they have the same curve parameters
+function separateParallelEdges(edges) {
+    const counts = {};
+    for (const e of edges) {
+        const key = `${e.from}|${e.to}`;
+        counts[key] = (counts[key] || 0) + 1;
+    }
+
+    const indices = {};
+    for (const e of edges) {
+        const key = `${e.from}|${e.to}`;
+        const total = counts[key];
+
+        if (total > 1) {
+            indices[key] = (indices[key] || 0) + 1;
+            const idx = indices[key] - 1;
+            const middle = (total - 1) / 2;
+            const offset = idx - middle;
+
+            const base = 0.20;
+            const step = 0.20;
+            const roundness = base + Math.abs(offset) * step;
+            const type = offset >= 0 ? "curvedCW" : "curvedCCW";
+
+            e.smooth = { enabled: true, type, roundness };
+            e.font = e.font || {};
+            e.font.align = offset >= 0 ? "top" : "bottom";
+        } else {
+            e.smooth = { enabled: true, type: "cubicBezier" };
+        }
+
+        if (e.from === e.to) {
+            e.smooth = { enabled: true, type: "curvedCW", roundness: 0.6 };
+            e.dashes = e.dashes || false;
+            e.font = e.font || {};
+            e.font.align = "middle";
+        }
+    }
+}
+
 
 fetch("assets/luka_session_01.json")
     .then(res => res.json())
     .then(data => {
-        const elements = [];
+        const nodes = [];
+        const edges = [];
 
         for (const [id, node] of Object.entries(data)) {
-            // Add the node
-            elements.push({
-                // push a node ele to the graph, with label read from a property of the node data
-                data: { id, label: `${node.ID}` }
+            nodes.push({
+                id,
+                label: node.ID,
+                shape: "box",
+                color: "#4a90e2",
+                font: { multi: true }
             });
 
-            // Add edges for Choices
             if (node.Choices) {
                 for (const choice of node.Choices) {
-                    const choiceTextSnippet = extractContentfulSnippet(choice.Text);
+                    const snippet = extractContentfulSnippet(choice.Text);
                     console.log("before:", choice.Text);
-                    console.log("after:", choiceTextSnippet);
-                    
-                    const requirementSnippet = choice.Requirements.length > 0 ? choice.Requirements[0] : "";
-                    const edgeLabel = requirementSnippet ? `${choiceTextSnippet} | ${requirementSnippet}` : choiceTextSnippet;
+                    console.log("after:", snippet);
+                    const requirement = choice.Requirements.length ? choice.Requirements[0] : "";
+                    const edgeLabel = requirement ? `${snippet}\n${requirement}` : snippet;
 
                     if (choice.NextNodeID) {
-                        elements.push({
-                            data: {
-                                source: id,
-                                target: choice.NextNodeID,
-                                label: edgeLabel,
-                                type: "choice"
-                            }
+                        edges.push({
+                            from: id,
+                            to: choice.NextNodeID,
+                            label: edgeLabel,
+                            arrows: "to",
+                            color: { color: "gray" },
+                            font: { multi: true, align: "top" }
                         });
                     }
 
                     if (choice.FailureNodeID) {
-                        elements.push({
-                            data: {
-                                source: id,
-                                target: choice.FailureNodeID,
-                                label: "(fail)",
-                                type: "failure"
-                            }
+                        edges.push({
+                            from: id,
+                            to: choice.FailureNodeID,
+                            label: "(fail)",
+                            arrows: "to",
+                            color: { color: "red" },
+                            dashes: true
                         });
                     }
                 }
             }
 
-            // Add edge for NextNodeID (auto-advance)
             if (node.NextNodeID) {
-                elements.push({
-                    data: { source: id, target: node.NextNodeID, label: "", type: "flow" }
+                edges.push({
+                    from: id,
+                    to: node.NextNodeID,
+                    label: "",
+                    arrows: "to",
+                    color: { color: "black" }
                 });
             }
         }
 
-        // Render Cytoscape
-        cytoscape({
-            container: document.getElementById("cy"),
-            elements,
-            style: [
-                { selector: "node", style: { "label": "data(label)", "background-color": "#4a90e2" } },
-                { selector: "edge", style: { "label": "data(label)", "curve-style": "bezier", "target-arrow-shape": "triangle" } },
-                { selector: "edge[type='failure']", style: { "line-color": "red", "target-arrow-color": "red", "line-style": "dashed" } },
-                { selector: "edge[type='choice']", style: { "line-color": "gray", "target-arrow-color": "gray", "line-style": "dashed" } }
-            ],
-            layout: {
-                name: "dagre",
-                rankDir: "TB",
-                nodeSep: 50,
-                rankSep: 100
-            }
-        });
+        separateParallelEdges(edges);
+
+        const container = document.getElementById("network");
+        const dataVis = { nodes, edges };
+        const options = {
+            layout: { hierarchical: { direction: "UD", sortMethod: "directed" } },
+            edges: {
+                smooth: {
+                    type: "curvedCW", // clockwise curve
+                    roundness: 0.2    // adjust curvature
+                },
+                font: { multi: true, align: "top" }
+            },
+            physics: { enabled: false },
+            interaction: { hover: true, multiselect: true }
+        };
+
+        new Network(container, dataVis, options);
     });
