@@ -2,9 +2,10 @@
 
 - [Data structures](#data-structures)
     - [At a glance](#at-a-glance)
-    - [Data heavy classes](#data-heavy-classes)
+    - [Data-oriented classes](#data-oriented-classes)
         - [CommonNode](#commonnode)
         - [DialogueNode](#dialoguenode)
+        - [DialogueLink](#dialoguelink)
         - [CharBarkNode](#charbarknode)
         - [SurrBarkNode](#surrbarknode)
     - [Organizational Structures](#organizational-structures)
@@ -18,30 +19,31 @@
         - [DialogueGraph](#dialoguegraph)
         - [Dialogue Nodes](#dialogue-nodes)
             - [dialogue node id: 19245](#dialogue-node-id-19245)
-            - [choice id: 1262](#choice-id-1262)
-            - [choice id: 1263](#choice-id-1263)
-            - [choice id: 1264](#choice-id-1264)
+            - [dialogue link id: 1262](#dialogue-link-id-1262)
+            - [dialogue link id: 1263](#dialogue-link-id-1263)
+            - [dialogue link id: 1264](#dialogue-link-id-1264)
             - [dialogue node id: 8](#dialogue-node-id-8)
-            - [choice id: 1265](#choice-id-1265)
-            - [choice id: 1266](#choice-id-1266)
+            - [dialogue link id: 1265](#dialogue-link-id-1265)
+            - [dialogue link id: 1266](#dialogue-link-id-1266)
             - [dialogue node id: 514](#dialogue-node-id-514)
-            - [choice id: 1267](#choice-id-1267)
+            - [dialogue link id: 1267](#dialogue-link-id-1267)
             - [dialogue node id: 172](#dialogue-node-id-172)
-            - [choice id: 1268](#choice-id-1268)
-            - [choice id: 1269](#choice-id-1269)
+            - [dialogue link id: 1268](#dialogue-link-id-1268)
+            - [dialogue link id: 1269](#dialogue-link-id-1269)
             - [dialogue node id: 7182](#dialogue-node-id-7182)
-            - [choice id: 1270](#choice-id-1270)
-            - [dialogue node id: 7183 (if no variables in texts)](#dialogue-node-id-7183-if-no-variables-in-texts)
-            - [choice id: 1271](#choice-id-1271)
+            - [dialogue link id: 1270](#dialogue-link-id-1270)
+            - [dialogue link id: 1271](#dialogue-link-id-1271)
+            - [dialogue node id: 7183](#dialogue-node-id-7183)
+            - [dialogue link id: 1272](#dialogue-link-id-1272)
             - [dialogue node id: 265351](#dialogue-node-id-265351)
-            - [choice id: 1272](#choice-id-1272)
+            - [dialogue link id: 1273](#dialogue-link-id-1273)
             - [dialogue node id: 3543](#dialogue-node-id-3543)
-            - [choice id: 1273](#choice-id-1273)
-            - [choice id: 1274](#choice-id-1274)
+            - [dialogue link id: 1274](#dialogue-link-id-1274)
+            - [dialogue link id: 1275](#dialogue-link-id-1275)
             - [dialogue node id: 6302](#dialogue-node-id-6302)
-            - [choice id: 1275](#choice-id-1275)
+            - [dialogue link id: 1276](#dialogue-link-id-1276)
             - [dialogue node id: end](#dialogue-node-id-end)
-        - [Theoretical Run](#theoretical-run)
+        - [Scenario 1 Theoretical Run](#scenario-1-theoretical-run)
             - [Dialogue sequence id: p0065167390](#dialogue-sequence-id-p0065167390)
     - [Scenario 2: Guard Barks in a Level](#scenario-2-guard-barks-in-a-level)
         - [Guard AI State Machine](#guard-ai-state-machine)
@@ -51,12 +53,12 @@
         - [Bark Triggers (for CharBarkNode testing)](#bark-triggers-for-charbarknode-testing)
         - [Bark Cooldown Logic](#bark-cooldown-logic)
         - [CharBarkNode Examples](#charbarknode-examples)
-        - [Theoretical Run](#theoretical-run)
+        - [Scenario 2 Theoretical Run](#scenario-2-theoretical-run)
     - [Scenario 7: Two NPCs Exchange Greetings (Ambient Bark Chain)](#scenario-7-two-npcs-exchange-greetings-ambient-bark-chain)
         - [Context](#context)
         - [Bark Group: `checkpointgreetingAB`](#bark-group-checkpointgreetingab)
         - [Bark Nodes](#bark-nodes)
-        - [Theoretical Run](#theoretical-run)
+        - [Scenario 7 Theoretical Run](#scenario-7-theoretical-run)
 
 <!-- /TOC -->
 
@@ -70,9 +72,10 @@ Node types (single canonical)
 - CharBarkNode: For character barks.
 - SurrBarkNode: For non-character barks like non-diegetic or semi-diegetic thoughts, narrations, or inner voice barks.
 
-Graphs
+Graphs related
 
 - DialogueGraph: Directed graph representing a cluster of branching dialogue nodes and their relations.
+- DialogueLink: Basically edges of DialogueGraph graphs.
 
 Sequence (dialogue plot)
 
@@ -82,7 +85,7 @@ Runtime
 
 - ConversationInstance: with localBlackboard, history, currentNodeId.
 
-## Data heavy classes
+## Data-oriented classes
 
 ### CommonNode
 The fundamental unit for any dialogue or bark element.
@@ -114,13 +117,26 @@ Derived from `CommonNode`. Used for structured story conversations.
 > | **Reactive nodes**          | “Myrtle smiles warmly” node only appears if Myrtle.relationship > 3           | It’s simpler than adding multiple conditional edges leading to the same node.        |
 > | **Dynamic entry points**    | Player revisits a conversation later, game jumps directly to a node           | You might not know *which* edge led there, so you evaluate node conditions directly. |
 > | **Contextual replacements** | One NPC has multiple variants of the same line (angry vs friendly)            | Each variant node checks relationship or world flags to see if it’s valid.           |
-> | **Partial randomization**   | A node pool for ambient remarks — pick one whose conditions fit current state | Each node in the pool can self-filter with its own conditions.                       |
+> | **Partial randomization**   | A node pool for ambient remarks, pick one whose conditions fit current state | Each node in the pool can self-filter with its own conditions.                       |
 
 
 **Example event outputs**
 - `set world.GateFixed = true`
 - `npc.Mira.relationship += 1`
 - `play_sound("repair_gate")`
+
+### DialogueLink
+
+Bascially an edge for a graph. Probably mainly used by story dialogues, from one DialogueNode to another in the dialogue graph. Can represent a linear continuation, a player choice, or an automatic conditional transition.
+
+| Field           | Type                                   | Applies to Type (enum)            | Description                                                                                                                                                                            |
+| --------------- | -------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`          | `enum { Linear, Choice, Conditional }` | all                         | Defines the semantic role of this link: continues automatically, presents a player choice, or transitions based on conditions.                                             |
+| `text`          | string                             | **Choice**                  | Text shown to the player for this choice. Ignored for Linear and Conditional links.                                                                                                    |
+| `conditions_in` | list                               | **Conditional**, **Choice** | The conditions that must be true for this link to be available or valid. For Linear links, this is typically empty.                                                                    |
+| `events_out`    | list                               | all                         | Events triggered **when this link is taken**, e.g., updating world variables, setting dialogue flags, playing SFX/VO, or firing game scripts. Think of it as “on transition” effects. |
+| `next_node`     | reference                          | all                         | The target node this link leads to. |
+| `prev_node`     | reference                          | all                         | The source node this link originates from. Maybe we don't need this. |
 
 ### CharBarkNode
 Represents reactive short barks from NPCs or ambient characters.
@@ -173,8 +189,8 @@ Represents the overall structure of a story conversation.
 |--------|------|-------------|
 | `id` | string | Unique identifier. |
 | `nodes` | list | Array of `DialogueNode` objects. |
-| `edges` | list | Relationships between nodes (for editor rendering). |
-| `conditions_in` | list | May include story flags, quest variables, or relationship levels. |
+| `links` | list | Relationships between nodes, for data traversal, editor rendering, etc. |
+| `conditions_in` | list | Entrance requirements of this graph. May include story flags, quest variables, or relationship levels. |
 | `entry_node` | reference | The starting node. |
 | `tags` | list | Metadata for quest or story classification. |
 
@@ -244,44 +260,44 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
     ```
     "I should wake up. Find the Marsh Witch."
     ```
-- choices: [go to village (1262),
-            go see Myrtle (1263),
-            meditate (12641)]
+- links: [go to village (1262),
+          go see Myrtle (1263),
+          meditate (1264)]
 - events_out: []
 
-#### choice id: 1262
+#### dialogue link id: 1262
+- type: Choice
 - text:
     ```
     "(Go to village.)"
     ```
-- conditions: [mood >= 2]
+- conditions_in: [mood >= 2]
 - events_out: [social +1]
 - next_node: 8
 - prev_node: 19245
-- presented: T
 
-#### choice id: 1263
+#### dialogue link id: 1263
+- type: Choice
 - text:
     ```
     "(Go check on Myrtle.)"
     ```
-- conditions: []
+- conditions_in: []
 - events_out: []
 - next_node: 172
 - prev_node: 19245
-- presented: T
 
-#### choice id: 1264
+#### dialogue link id: 1264
+- type: Choice
 - text:
     ```
     "(Meditate on previous events.)"
     ```
-- conditions: []
+- conditions_in: []
 - events_out: [MP +1,
                 memory fragment 37 +1]
 - next_node: 6302
 - prev_node: 19245
-- presented: T
 
 #### dialogue node id: 8
 - name: village detour
@@ -291,51 +307,49 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
     "Alright I'll go to see if Eric got new phials.
     Oh he is on purple fire again... It will die out by itself very soon though."
     ```
-- choices: [help Eric (1265),
-            let him learn (1266)]
+- links: [help Eric (1265),
+          let him learn (1266)]
 - events_out: []
 
-#### choice id: 1265
+#### dialogue link id: 1265
+- type: Choice
 - text:
     ```
     "Help him put it out now. I am in a good mood today."
     ```
-- conditions: []
+- conditions_in: []
 - events_out: []
 - next_node: 514
 - prev_node: 8
-- presented: T
 
-#### choice id: 1266
+#### dialogue link id: 1266
+- type: Choice
 - text:
     ```
     "If I help him then he will never learn."
     ```
-- conditions: []
+- conditions_in: []
 - events_out: []
 - next_node: 172
 - prev_node: 8
-- presented: T
 
 #### dialogue node id: 514
-- name: recieve rare fruit
+- name: recieve rare recipe
 - speaker: Eric
 - text:
     ```
     "Thanks [protagonist_name]! I don't have to buy new workwear again.
-    Here, I got this rare plum from a regular. I don't know how to use
-    it anyway!"
+    Here, I got this recipe from my regular Alchemist from London. I don't
+    know how to use it anyway!"
     ```
-- choices: []
+- links: [1267]
 - events_out: []
 
-#### choice id: 1267
-- text: ""
-- conditions: []
+#### dialogue link id: 1267
+- type: Linear
 - events_out: []
 - next_node: end
 - prev_node: 514
-- presented: F
 
 #### dialogue node id: 172
 - name: knock Myrtle door
@@ -346,31 +360,31 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
     I was thinking about visiting you just a while ago.
     You going to London?"
     ```
-- choices: [ask about alchemist (1268),
-            ask about alchemist and give herb (1269)]
+- links: [ask about alchemist (1268),
+          ask about alchemist and give herb (1269)]
 - events_out: []
 
-#### choice id: 1268
+#### dialogue link id: 1268
+- type: Choice
 - text:
     ```
     "(Ask her about the alchemist.)"
     ```
-- conditions: []
+- conditions_in: []
 - events_out: [set ConversationInstance.giving_myrtle_herb = F]
 - next_node: 7182
 - prev_node: 172
-- presented: T
 
-#### choice id: 1269
+#### dialogue link id: 1269
+- type: Choice
 - text:
     ```
-    "(Ask her about the alchemist and give her chamomile.)"
+    "(I have chamomile for insomnia. Give her and ask her about the alchemist.)"
     ```
-- conditions: [chamomile >= 1]
+- conditions_in: [chamomile >= 1]
 - events_out: [set ConversationInstance.giving_myrtle_herb = T]
 - next_node: 7182
 - prev_node: 172
-- presented: T
 
 #### dialogue node id: 7182
 - name: ask info 1
@@ -381,54 +395,56 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
     {{if ConversationInstance.giving_myrtle_herb == T} Here is one for your insomnia.}
     And I want to talk to that alchemist. Can you tell me the name again?"
     ```
-- choices: []
+- links: [gave herb low relation (1270),
+          gave herb mid relation (1271)]
 - events_out: [chamomile -1 if giving_myrtle_herb == T,
                Myrtle relation +1 if giving_myrtle_herb == T]
 
-#### choice id: 1270
-- text: ""
-- conditions: []
+#### dialogue link id: 1270
+- type: Conditional
+- conditions_in: [Myrtle relation <= 2]
 - events_out: []
 - next_node: 265351
 - prev_node: 7182
-- presented: F
 
-#### dialogue node id: 7183 (if no variables in texts)
+#### dialogue link id: 1271
+- type: Conditional
+- conditions_in: [Myrtle relation > 2]
+- events_out: []
+- next_node: 7183
+- prev_node: 7182
+
+#### dialogue node id: 7183
 - name: ask info 2
-- speaker: protagonist
+- speaker: Myrtle
 - text:
     ```
-    "Yes. I am selling these herbs.
-    And I want to talk to that alchemist. Can you tell me the name again?"
+    "You've always been so nice to people."
     ```
-- choices: []
+- links: [1272]
 - events_out: []
 
-#### choice id: 1271
-- text: ""
-- conditions: []
+#### dialogue link id: 1272
+- type: Linear
 - events_out: []
 - next_node: 265351
 - prev_node: 7183
-- presented: F
 
 #### dialogue node id: 265351
-- name: recieve info
+- name: recieve info Myrtle
 - speaker: Myrtle
 - text:
     ```
     "Sure! His name is Thomas. Be ware though. His shop is near the palace."
     ```
-- choices: []
+- links: [1273]
 - events_out: [trigger optional goal *get chamomile* if giving_myrtle_herb == F]
 
-#### choice id: 1272
-- text: ""
-- conditions: []
+#### dialogue link id: 1273
+- type: Linear
 - events_out: []
 - next_node: end
 - prev_node: 265351
-- presented: F
 
 #### dialogue node id: 3543
 - name: bump into squirrel
@@ -438,66 +454,66 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
     "Chik chik. (The squirrel looks a bit scared.)
     (It holds a tramped-upon berry.)"
     ```
-- choices: [pet it and move on (1273),
-            feed it and play (1274)]
+- links: [pet it and move on (1274),
+          feed it and play (1275)]
 - events_out: []
 
-#### choice id: 1273
+#### dialogue link id: 1274
+- type: Choice
 - text:
     ```
     "(Pet it sympathetically and go on.)"
     ```
-- conditions: []
+- conditions_in: []
 - events_out: [play a CG]
 - next_node: 172
 - prev_node: 3543
-- presented: T
 
-#### choice id: 1274
+#### dialogue link id: 1275
+- type: Choice
 - text:
     ```
     "I can repair the fruit. Got some energy to spare today."
     ```
-- conditions: []
+- conditions_in: []
 - events_out: [ConversationInstance.bumped_fed_squirrel == T]
 - next_node: 6302
 - prev_node: 3543
-- presented: T
 
 #### dialogue node id: 6302
-- name: recieve info
+- name: recieve info mysterious
 - speaker: squirrel
 - text:
     ```
     "{{if ConversationInstance.bumped_fed_squirrel == F}}(A strange squirrel appeared outside the open window, with something in its claws.)
     Eeeeek! (The squirrel squeaked cheerfully.)
-    (The squirrel left a mini scroll. On it is a note: 'Alchemist Thomas'.)
-    (That is not all. Unrolling it further, there is '... is dead'.)"
+    (The squirrel left a mini scroll. The loose end reveals a part of some note: 'Thomas the Alc'.)
+    (Unrolling it further, there is '...hemist is dead'.)"
     ```
-- choices: []
+- links: [1276]
 - events_out: []
 
-#### choice id: 1275
-- text: ""
-- conditions: []
+    > Node 6302 probably will be split to several "sub nodes" using links with Linear type.
+
+#### dialogue link id: 1276
+- type: Linear
 - events_out: []
 - next_node: end
 - prev_node: 6302
-- presented: F
 
 #### dialogue node id: end
 - name: go to London
 - speaker: protagonist
 - text:
     ```
-    "{{if DialoguSequence.nodeVisited(6302) == T}I'd better be careful if his shop is open then.}
+    "{{if DialogueSequence.nodeVisited(6302) == T}I'd better be careful if his shop is open then.}
     Thanks. Time to go to London."
     ```
-- choices: []
+- links: []
 - events_out: [set ConversationInstance.path_reaches_end = T,
                call ConversationInstance.save_dialogue_seq()]
 
-### Theoretical Run
+### Scenario 1 Theoretical Run
 
 It can go like this:
 
@@ -607,9 +623,9 @@ else play bark and update guard_last_bark_time
 |----|----------|------|-------------|-----------|-----------|--------|
 | `g_alert` | Guard | “What was that?” | guard_alerted == true | 1.0 | 5s | trigger:search |
 | `g_resume_patrol` | Guard | “Must’ve been the wind.” | state == guard_stop_searching | 0.5 | 10s | clear_flag("guard_alerted") |
-| `g_comment` | Guard | “This route never changes…” | state == guard_patrolling, random<0.1 | 0.2 | 20s | — |
+| `g_comment` | Guard | “This route never changes…” | state == guard_patrolling, random<0.1 | 0.2 | 20s | - |
 
-### Theoretical Run
+### Scenario 2 Theoretical Run
 
 In short:
 
@@ -672,10 +688,10 @@ Two guards at a checkpoint casually greet each other in the morning.
 | ID | Speaker | Text | Conditions | Delay | Priority | Next | Cooldown |
 |----|----------|------|-------------|--------|-----------|--------|-----------|
 | `A_hello` | Guard A | “Morning, Cato.” | Guard B nearby | 0s | 0.2 | `B_reply` | 60s |
-| `B_reply` | Guard B | “Morning. Patrol quiet?” | — | 0.7s | 0.2 | `A_close` | 60s |
-| `A_close` | Guard A | “Too quiet. Makes me nervous.” | — | 0.8s | 0.2 | END | 60s |
+| `B_reply` | Guard B | “Morning. Patrol quiet?” | - | 0.7s | 0.2 | `A_close` | 60s |
+| `A_close` | Guard A | “Too quiet. Makes me nervous.” | - | 0.8s | 0.2 | END | 60s |
 
-### Theoretical Run
+### Scenario 7 Theoretical Run
 1. Player approaches → trigger conditions satisfied.  
 2. Guard A says “Morning, Cato.” (start node).  
 3. Guard B replies after delay.  
