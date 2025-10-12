@@ -102,10 +102,20 @@ Derived from `CommonNode`. Used for structured story conversations.
 | Field | Type | Description |
 |--------|------|-------------|
 | `speaker` | reference | Usually a character in the world (NPC or player). |
+| `conditions_in` | list | Optional. Often empty but can be useful for dynamic entry points, contextual replacements, etc. See notes. |
 | `events_out` | list | May change world variables, play VO, modify relationships, etc. |
 | `choices` | list | Player responses leading to other dialogue nodes. |
 | `next_node` | reference | Used for linear follow-up dialogue. |
 | `tags` | list | Optional metadata (emotion, tone, UI style). |
+
+> Note 1: Do we need `conditions_in`? Here are some scenarios where we may want it:
+> | Case                        | Example                                                                       | Why Node Conditions Help                                                             |
+> | --------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+> | **Reactive nodes**          | “Myrtle smiles warmly” node only appears if Myrtle.relationship > 3           | It’s simpler than adding multiple conditional edges leading to the same node.        |
+> | **Dynamic entry points**    | Player revisits a conversation later, game jumps directly to a node           | You might not know *which* edge led there, so you evaluate node conditions directly. |
+> | **Contextual replacements** | One NPC has multiple variants of the same line (angry vs friendly)            | Each variant node checks relationship or world flags to see if it’s valid.           |
+> | **Partial randomization**   | A node pool for ambient remarks — pick one whose conditions fit current state | Each node in the pool can self-filter with its own conditions.                       |
+
 
 **Example event outputs**
 - `set world.GateFixed = true`
@@ -230,14 +240,20 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 19245
 - name: wake up
 - speaker: Protagonist
-- text: "I should wake up. Find the Marsh Witch."
+- text:
+    ```
+    "I should wake up. Find the Marsh Witch."
+    ```
 - choices: [go to village (1262),
             go see Myrtle (1263),
             meditate (12641)]
 - events_out: []
 
 #### choice id: 1262
-- text: "(Go to village.)"
+- text:
+    ```
+    "(Go to village.)"
+    ```
 - conditions: [mood >= 2]
 - events_out: [social +1]
 - next_node: 8
@@ -245,7 +261,10 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 - presented: T
 
 #### choice id: 1263
-- text: "(Go check on Myrtle.)"
+- text:
+    ```
+    "(Go check on Myrtle.)"
+    ```
 - conditions: []
 - events_out: []
 - next_node: 172
@@ -253,7 +272,10 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 - presented: T
 
 #### choice id: 1264
-- text: "(Meditate on previous events.)"
+- text:
+    ```
+    "(Meditate on previous events.)"
+    ```
 - conditions: []
 - events_out: [MP +1,
                 memory fragment 37 +1]
@@ -264,14 +286,20 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 8
 - name: village detour
 - speaker: Protagonist
-- text: "Alright I'll go to see if Eric got new phials.
-        Oh he is on purple fire again... It will die out by itself very soon though."
+- text:
+    ```
+    "Alright I'll go to see if Eric got new phials.
+    Oh he is on purple fire again... It will die out by itself very soon though."
+    ```
 - choices: [help Eric (1265),
             let him learn (1266)]
 - events_out: []
 
 #### choice id: 1265
-- text: "Help him put it out now. I am in a good mood today."
+- text:
+    ```
+    "Help him put it out now. I am in a good mood today."
+    ```
 - conditions: []
 - events_out: []
 - next_node: 514
@@ -279,7 +307,10 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 - presented: T
 
 #### choice id: 1266
-- text: "If I help him then he will never learn."
+- text:
+    ```
+    "If I help him then he will never learn."
+    ```
 - conditions: []
 - events_out: []
 - next_node: 172
@@ -289,9 +320,12 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 514
 - name: recieve rare fruit
 - speaker: Eric
-- text: "Thanks [protagonist_name]! I don't have to buy new workwear again.
-        Here, I got this rare plum from a regular. I don't know how to use
-        it anyway!"
+- text:
+    ```
+    "Thanks [protagonist_name]! I don't have to buy new workwear again.
+    Here, I got this rare plum from a regular. I don't know how to use
+    it anyway!"
+    ```
 - choices: []
 - events_out: []
 
@@ -306,15 +340,21 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 172
 - name: knock Myrtle door
 - speaker: Myrtle
-- text: "Oh hi [protagonist_name]! Sorry for keeping you waiting. Insomnia.
-        I was thinking about visiting you just a while ago.
-        You going to London?"
+- text:
+    ```
+    "Oh hi [protagonist_name]! Sorry for keeping you waiting. Insomnia.
+    I was thinking about visiting you just a while ago.
+    You going to London?"
+    ```
 - choices: [ask about alchemist (1268),
             ask about alchemist and give herb (1269)]
 - events_out: []
 
 #### choice id: 1268
-- text: "(Ask her about the alchemist.)"
+- text:
+    ```
+    "(Ask her about the alchemist.)"
+    ```
 - conditions: []
 - events_out: [set ConversationInstance.giving_myrtle_herb = F]
 - next_node: 7182
@@ -322,7 +362,10 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 - presented: T
 
 #### choice id: 1269
-- text: "(Ask her about the alchemist and give her chamomile.)"
+- text:
+    ```
+    "(Ask her about the alchemist and give her chamomile.)"
+    ```
 - conditions: [chamomile >= 1]
 - events_out: [set ConversationInstance.giving_myrtle_herb = T]
 - next_node: 7182
@@ -332,9 +375,12 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 7182
 - name: ask info 1
 - speaker: protagonist
-- text: "Yes. I am selling these herbs.
-        {{if ConversationInstance.giving_myrtle_herb == T} Here is one for your insomnia.}
-        And I want to talk to that alchemist. Can you tell me the name again?"
+- text:
+    ```
+    "Yes. I am selling these herbs.
+    {{if ConversationInstance.giving_myrtle_herb == T} Here is one for your insomnia.}
+    And I want to talk to that alchemist. Can you tell me the name again?"
+    ```
 - choices: []
 - events_out: [chamomile -1 if giving_myrtle_herb == T,
                Myrtle relation +1 if giving_myrtle_herb == T]
@@ -350,8 +396,11 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 7183 (if no variables in texts)
 - name: ask info 2
 - speaker: protagonist
-- text: "Yes. I am selling these herbs.
-        And I want to talk to that alchemist. Can you tell me the name again?"
+- text:
+    ```
+    "Yes. I am selling these herbs.
+    And I want to talk to that alchemist. Can you tell me the name again?"
+    ```
 - choices: []
 - events_out: []
 
@@ -366,7 +415,10 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 265351
 - name: recieve info
 - speaker: Myrtle
-- text: "Sure! His name is Thomas. Be ware though. His shop is near the palace."
+- text:
+    ```
+    "Sure! His name is Thomas. Be ware though. His shop is near the palace."
+    ```
 - choices: []
 - events_out: [trigger optional goal *get chamomile* if giving_myrtle_herb == F]
 
@@ -381,14 +433,20 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 3543
 - name: bump into squirrel
 - speaker: squirrel
-- text: "Chik chik. (The squirrel looks a bit scared.)
-        (It holds a tramped-upon berry.)"
+- text:
+    ```
+    "Chik chik. (The squirrel looks a bit scared.)
+    (It holds a tramped-upon berry.)"
+    ```
 - choices: [pet it and move on (1273),
             feed it and play (1274)]
 - events_out: []
 
 #### choice id: 1273
-- text: "(Pet it sympathetically and go on.)"
+- text:
+    ```
+    "(Pet it sympathetically and go on.)"
+    ```
 - conditions: []
 - events_out: [play a CG]
 - next_node: 172
@@ -396,7 +454,10 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 - presented: T
 
 #### choice id: 1274
-- text: "I can repair the fruit. Got some energy to spare today."
+- text:
+    ```
+    "I can repair the fruit. Got some energy to spare today."
+    ```
 - conditions: []
 - events_out: [ConversationInstance.bumped_fed_squirrel == T]
 - next_node: 6302
@@ -406,9 +467,13 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: 6302
 - name: recieve info
 - speaker: squirrel
-- text: "Eeeeek! (The squirrel squeaked cheerfully.)
-        {{if ConversationInstance.bumped_fed_squirrel == F}}(A strange squirrel appeared outside the open window, with something in its mouth.)
-        (The squirrel left a mini scroll. On it is a note: Thomas (but dead).)"
+- text:
+    ```
+    "{{if ConversationInstance.bumped_fed_squirrel == F}}(A strange squirrel appeared outside the open window, with something in its claws.)
+    Eeeeek! (The squirrel squeaked cheerfully.)
+    (The squirrel left a mini scroll. On it is a note: 'Alchemist Thomas'.)
+    (That is not all. Unrolling it further, there is '... is dead'.)"
+    ```
 - choices: []
 - events_out: []
 
@@ -423,7 +488,11 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 #### dialogue node id: end
 - name: go to London
 - speaker: protagonist
-- text: "Thanks. Time to go to London then ^_^"
+- text:
+    ```
+    "{{if DialoguSequence.nodeVisited(6302) == T}I'd better be careful if his shop is open then.}
+    Thanks. Time to go to London."
+    ```
 - choices: []
 - events_out: [set ConversationInstance.path_reaches_end = T,
                call ConversationInstance.save_dialogue_seq()]
@@ -432,7 +501,9 @@ Player wakes up from strange dreams mixed with unconcious convo with a mysteriou
 
 It can go like this:
 
-Then we will at least have a DialogueSequence instance recording the players chosen path in this graph.
+<img src="./assets/data-structures-snip-01.jpg" alt="" width="400">
+
+. Then we will have (at least) a DialogueSequence instance recording the players chosen path in this graph.
 
 With the saved DialogueSequence instance in some file, we can later collect the choices made by the player, and the last node visited by the player. If there is anything needing to use "dialogue graph 167390 was traversed following path 7347865", it can use the id 7347865 as a condition.
 
