@@ -54,6 +54,18 @@
         - [Bark Cooldown Logic](#bark-cooldown-logic)
         - [CharBarkNode Examples](#charbarknode-examples)
         - [Scenario 2 Theoretical Run](#scenario-2-theoretical-run)
+    - [Scenario 3: Protagonist meets a former enemy](#scenario-3-protagonist-meets-a-former-enemy)
+        - [Context](#context)
+        - [A SurrBarkGroup](#a-surrbarkgroup)
+        - [Surr bark nodes](#surr-bark-nodes)
+            - [Surr bark id: sbn364](#surr-bark-id-sbn364)
+            - [Dialogue link id: sbnl48770](#dialogue-link-id-sbnl48770)
+            - [Surr bark id: sbn465973](#surr-bark-id-sbn465973)
+            - [Surr bark id: sbn43745](#surr-bark-id-sbn43745)
+            - [Surr bark id: sbn3651](#surr-bark-id-sbn3651)
+        - [Theoretical System Components Involved](#theoretical-system-components-involved)
+        - [Scenario 3 Theoretical Run](#scenario-3-theoretical-run)
+            - [Summary on event sequence](#summary-on-event-sequence)
     - [Scenario 7: Two NPCs Exchange Greetings (Ambient Bark Chain)](#scenario-7-two-npcs-exchange-greetings-ambient-bark-chain)
         - [Context](#context)
         - [Bark Group: `checkpointgreetingAB`](#bark-group-checkpointgreetingab)
@@ -165,11 +177,17 @@ Represents inner voice or environmental narration elements.
 | Field | Type | Description |
 |--------|------|-------------|
 | `speaker` | reference | Player inner voice or environmental actor. |
+| `text` | string | Displayed subtitle text. |
 | `conditions_in` | list | Narrative context (player location, quest stage, health). |
 | `events_out` | list | Dialogue triggers, audio events, or world-state influence. |
-| `choices` | list | Occasionally presents internal monologue branches. |
-| `next_node` | reference | Optional linear follow-up. |
-| `channel` | enum | Audio layer: `inner`, `env`, `npc`, `narrative`. |
+| `choices` | list | Possible internal monologue branches. |
+| `next_node` | reference | Possible linear follow-up. |
+| `alt_texts`        | list<string>                                                       | Optional. Variations for randomization.         |
+| `channel` | enum | `inner`, `env`, `narrator`. Determines audio routing and overlap priority (ducking rules). Typically `inner` for internal monologue, `env` for ambient non-character speech. |
+| `spatialization` | enum | `none`, `binaural`, `world`, `2d`. Controls how sound is positioned.<br> - Binaural: for inside-head voices (e.g. Disco Elysium).<br> - World: anchored to a world position (e.g. a statue whispering).<br> - 2D: standard non-diegetic narration.|
+| `priority`         | int                                                                | Used by `BarkArbitrator` when channels compete. Higher overrides lower.             |
+| `interrupt_policy` | enum { `CanInterrupt`, `DuckIfBusy`, `QueueIfBusy`, `SkipIfBusy` } | Determines how to handle simultaneous playback with other channels.                                  |
+| `cooldown`         | float seconds                                                      | Prevents over-repetition.                 |
 
 **Example conditions**
 - `player.hp < 0.3`
@@ -664,6 +682,219 @@ events_out:
   - set(world.player_detected_recently, true)
   - set(world.alert_level, 1)
 ```
+
+## Scenario 3: Protagonist meets a former enemy
+
+Test `SurrBarkNode` sequencing and arbitrating.
+
+### Context
+
+In a scripted game play sequence, player control protagonist to walk face to face with a former enemy who hurt her family but not directly her, so does not recognize her in person. But the protagonist surely remember the face of this enemy. Player is offered 2 choices in a timed event, one is to confront, the other is not. Before the event expires, inner voices dialogues are triggered, presenting the protagonist's schizophrenia more vividly. If the player made choice too quickly, then inner voices will be cut short. So we might want to display the choices after a little while.
+
+### A SurrBarkGroup
+
+A group object that has a set of SurrBarkNode objects, each holding a inner voice that can be triggered during this event. Each node has some conditions too.
+
+- id: sbg3746
+- nodes: [sbn364, sbn43745, sbn3651]
+- conditions_in: [player.near(enemy123) == true]
+- events_out: [trigger ui display choice by `OnAllBarkEnd` signal]
+
+### Surr bark nodes
+
+#### Surr bark id: sbn364
+
+- speaker: inner_doubt
+- text: "You can't do this. You always mess it up."
+- conditions_in: [player.sanity < 10]
+- events_out: []
+- links: [sbnl48770]
+- alt_texts: ["Why do you think you can face them?",
+            "You are not prepared for this. Don't."]
+- priority: 10
+- cooldown: 30 (sec)
+- channel: inner
+- spatialization: binaural
+- interrupt_policy: DuckIfBusy
+
+#### Dialogue link id: sbnl48770
+
+- type: Linear
+- text: "Remember last time? You froze. like prey."
+- events_out: []
+- next_node: sbn465973
+
+#### Surr bark id: sbn465973
+
+- speaker: inner_doubt
+- text: "Remember last time? You froze. like prey."
+- conditions_in: []
+- events_out: []
+- links: []
+- alt_texts: []
+- priority: 10
+- cooldown: 30 (sec)
+- channel: inner
+- spatialization: binaural
+- interrupt_policy: DuckIfBusy
+
+#### Surr bark id: sbn43745
+
+- speaker: inner_courage
+- text: "Breathe. You can handle this. Slowly."
+- conditions_in: [player.mood > 9]
+- events_out: []
+- links: []
+- alt_texts: ["You have done this before. It is no different this time.",
+            "Come on, just try. What would be worse than before?"]
+- priority: 8
+- cooldown: 30 (sec)
+- channel: inner
+- spatialization: binaural
+- interrupt_policy: DuckIfBusy
+
+#### Surr bark id: sbn3651
+
+- speaker: inner_reptilian
+- text: "Hiss… move now. Fight. Survive."
+- conditions_in: [player.stress > 14]
+- events_out: []
+- links: []
+- alt_texts: ["Run... run fast to it. Faaaaaast.",
+              "The target! Pin it... Make it bleeeeeeed!"]
+- priority: 5
+- cooldown: 25 (sec)
+- channel: inner
+- spatialization: binaural
+- interrupt_policy: DuckIfBusy
+
+### Theoretical System Components Involved
+
+| Component                | Role                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| **BarkArbitrator**       | Decides which bark(s) play based on priority, cooldown, and channel state. Emits `OnAllBarkEnd` if all surr barks are in cool down or finished or something.   |
+| **AudioRouter**          | Routes bark output to appropriate channel (inner/env/narrator).                         |
+| **UIController**         | Handles subtitle display and (delayed) dialogue choice reveal.                          |
+| **ConversationInstance** | Manages the currently active narrative unit, may own a bark group or dialogue sequence. |
+
+### Scenario 3 Theoretical Run
+
+1. Scene trigger
+
+    Event: Player walks within range of `enemy123`.
+
+    System reactions:
+    - ConversationInstance receives OnPlayerNear(enemy123) event.
+    - It checks relevant narrative units and finds that SurrBarkGroup sbg3746 has a matching condition (player.near(enemy123) == true).
+    - The group is activated and registered with the BarkArbitrator.
+    
+2. Bark group activation
+    
+    To test through all nodes, let's say player.sanity = 7, player.mood = 10, player.stress = 22 so that all nodes' entry requirement are satisfied.
+    | Bark ID  | Speaker         | Condition Check    | Result | Priority |
+    | -------- | --------------- | ------------------ | ------ | -------- |
+    | sbn364   | inner_doubt     | player.sanity < 10 | ✅ True | 10       |
+    | sbn43745 | inner_courage   | player.mood > 9    | ✅ True | 8        |
+    | sbn3651  | inner_reptilian | player.stress > 14 | ✅ True | 5        |
+    
+    All three barks are eligible, so the arbitrator now applies priority + interrupt policy logic.
+
+3. Arbitration & playback sequence
+
+    `BarkArbitrator` checks `inner` channel availability:
+    - No current bark is playing → OK.
+    - It selects sbn364 (priority 10) first.
+
+4. Bark playback: sbn364 (inner_doubt)
+
+    `AudioRouter`:
+    - Sends to `inner` binaural channel.
+    - Applies `DuckIfBusy` — other channels (e.g., ambient, dialogue) get minor volume dip.
+
+    `UIController`:
+    - Displays subtitle:
+        ```
+        "You can't do this. You always mess it up."
+        ```
+
+    System state updates:
+    - `BarkArbitrator` sets sbn364.cooldown_timer = 30.
+    - Starts tracking its linked dialogue (sbnl48770) as a pending follow-up.
+
+5. Linear link: sbnl48770 → sbn465973
+    After sbn364 finishes audio + subtitle (let's say 2.4s duration):
+    - `BarkArbitrator` receives `OnBarkEnd`(sbn364).
+    - It checks if that bark has a link.
+    - Finds: sbnl48770 → sbn465973 (`Linear`).
+
+    So auto-chain playback without running arbitration again, since link type is `Linear`.
+
+6. Bark playback: sbn465973 (inner_doubt continued)
+
+    UI/Audio:
+    ```
+    “Remember last time? You froze. Like prey.”
+    ```
+
+    Behavioral effects:
+    - Because it shares the same channel and interrupt policy, it extends the “inner voice” performance seamlessly.
+    - The group still “owns” the playback session.
+
+    At end of this bark:
+    - `BarkArbitrator` receives another `OnBarkEnd`.
+    - Now no linear follow-up exists, so it resumes arbitration within the same group.
+
+7. Arbitration resumes within sbg3746
+    At this point:
+    - sbn364 and sbn465973 are both cooling down (30s).
+    Candidates:
+    - sbn43745 (inner_courage, priority 8)
+    - sbn3651 (inner_reptilian, priority 5)
+    
+    → inner_courage wins arbitration.
+
+8. Bark playback: sbn43745 (inner_courage)
+
+    Audio/Subtitle:
+    ```
+    “Breathe. You can handle this. Slowly.”
+    ```
+    Parallel events:
+    - `UIController` receives internal signal from `ConversationInstance`:
+        
+        “Wait until `BarkArbitrator` reports group cooling before showing player choices.”
+    - So the UI still hides the two dialogue choices ("Confront" / "Don’t confront") for now.
+
+9. Bark group cooling down
+
+    After ~7 seconds total:
+    - All barks are either cooling or finished.
+    - `BarkArbitrator` detects no eligible nodes available → emits group level `OnAllBarkEnd`.
+
+10. Dialogue choice reveal
+
+    `UIController` catches `OnAllBarkEnd` and now executes:
+    - DisplayChoiceSet("Confront", "Hold Back")
+
+    If the player had acted earlier than the ~7 seconds:
+    - The player’s choice input would have interrupted the current bark (based on interrupt_policy).
+    - `BarkArbitrator` would emit early `OnAllBarkEnd`, causing the UI to reveal choices immediately.
+
+#### Summary on event sequence
+
+Simplified.
+
+| Time | Event                       | Sender         | Receiver                           |
+| ---- | --------------------------- | -------------- | ---------------------------------- |
+| t0   | `OnGroupBarkStart(sbg3746)` | BarkArbitrator | UIController (to hide choices)     |
+| t0   | `OnBarkStart(sbn364)`       | AudioRouter    | —                                  |
+| t2.4 | `OnBarkEnd(sbn364)`         | AudioRouter    | BarkArbitrator                     |
+| t2.4 | `OnBarkStart(sbn465973)`    | AudioRouter    | —                                  |
+| t5.1 | `OnBarkEnd(sbn465973)`      | AudioRouter    | BarkArbitrator                     |
+| t5.2 | `OnBarkStart(sbn43745)`     | AudioRouter    | —                                  |
+| t7.0 | `OnBarkEnd(sbn43745)`       | AudioRouter    | BarkArbitrator                     |
+| t7.1 | `OnAllBarkEnd(sbg3746)`     | BarkArbitrator | UIController, ConversationInstance |
+
 
 ## Scenario 7: Two NPCs Exchange Greetings (Ambient Bark Chain)
 
