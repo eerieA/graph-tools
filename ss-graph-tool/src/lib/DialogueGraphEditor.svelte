@@ -1,16 +1,26 @@
-<!-- src/lib/DialogueGraphEditor.svelte -->
 <script lang="ts">
   import { SvelteFlow, Background, Controls, MiniMap, type Node, type Edge } from '@xyflow/svelte';
-  import '@xyflow/svelte/dist/style.css';
-  import { sampleGraph } from './models/sampleGraph';
-  import { toFlowNodes, toFlowEdges } from './utils/graphAdapter';
 
-  let nodes: Node[] = toFlowNodes(sampleGraph);
-  let edges: Edge[] = toFlowEdges(sampleGraph);
+  import '@xyflow/svelte/dist/style.css';
+
+  import DialogueNode from './nodes/DialogueNode.svelte';
+  import { sampleGraph } from './models/sampleGraph';
+  import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
+
+  // Convert our DialogueGraph model into flow data
+  const { nodes: initialNodes, edges: initialEdges } = adaptDialogueGraphToFlow(sampleGraph);
+
+  // Register our custom node type
+  const nodeTypes = { dialogueNode: DialogueNode };
+
+  // SvelteFlow just needs normal arrays
+  let nodes: Node[] = initialNodes;
+  let edges: Edge[] = initialEdges;
 </script>
 
 <div class="graph-container">
-  <SvelteFlow {nodes} {edges} fitView>
+  <!-- The bind:props let us edit the graph interactively -->
+  <SvelteFlow {nodes} {edges} {nodeTypes} fitView>
     <Background />
     <MiniMap />
     <Controls />
@@ -24,16 +34,7 @@
     background: #121212;
   }
 
-  :global(.svelte-flow__node-dialogueNode) {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 8px;
-    color: #eee;
-    font-family: system-ui;
-    font-size: 13px;
-  }
-
+  :global(.svelte-flow__edge-text),
   :global(.svelte-flow__edge-label) {
     font-size: 10px;
     font-family: system-ui;

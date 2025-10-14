@@ -12,7 +12,7 @@ export const sampleGraph: DialogueGraph = {
     {
       id: 'd2',
       speaker: 'Player',
-      text: 'Show me what you have.',
+      text: 'Hmmm. Maybe. Show me what you have.',
     },
     {
       id: 'd3',
@@ -24,7 +24,7 @@ export const sampleGraph: DialogueGraph = {
     {
       id: 'link_1',
       type: 'Choice',
-      text: 'Show me your goods.',
+      text: 'Show your goods.',
       prev_node: 'd1',
       next_node: 'd2',
     },
