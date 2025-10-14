@@ -81,7 +81,7 @@ Derived from `CommonNode`. Used for structured story conversations.
 
 ### DialogueLink
 
-Bascially an edge for a graph. Probably mainly used by story dialogues, from one DialogueNode to another in the dialogue graph. Can represent a linear continuation, a player choice, or an automatic conditional transition.
+Bascially sysnonymous with an edge for a graph in this prototype. Probably mainly used by story dialogues, from one DialogueNode to another in the dialogue graph. Can represent a linear continuation, a player choice, or an automatic conditional transition.
 
 | Field           | Type                                   | Applies to Type (enum)            | Description                                                                                                                                                                            |
 | --------------- | -------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -90,7 +90,9 @@ Bascially an edge for a graph. Probably mainly used by story dialogues, from one
 | `conditions_in` | list                               | **Conditional**, **Choice** | The conditions that must be true for this link to be available or valid. For Linear links, this is typically empty.                                                                    |
 | `events_out`    | list                               | all                         | Events triggered **when this link is taken**, e.g., updating world variables, setting dialogue flags, playing SFX/VO, or firing game scripts. Think of it as “on transition” effects. |
 | `next_node`     | reference                          | all                         | The target node this link leads to. |
-| `prev_node`     | reference                          | all                         | The source node this link originates from. Maybe we don't need this. |
+| `prev_node`     | reference                          | all                         | The source node this link originates from. |
+
+> Having record of both nodes of a link eliminate the need for a pure edge list in DialogueGraph. I.e. this structure is a "replacement" of edges.
 
 ### CharBarkNode
 Represents reactive short barks from NPCs or ambient characters.
