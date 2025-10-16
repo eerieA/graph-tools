@@ -1,3 +1,4 @@
+// This file holds the domain model for dialogue system, which is different than the one in DialoguNode.svelte
 export type LinkType = 'Linear' | 'Choice' | 'Conditional';
 
 export interface CommonNode {

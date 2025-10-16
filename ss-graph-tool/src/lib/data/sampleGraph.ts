@@ -1,4 +1,4 @@
-import type { DialogueGraph } from './dialogueTypes';
+import type { DialogueGraph } from '../models/dialogueTypes';
 
 export const sampleGraph: DialogueGraph = {
   id: 'dlg_test_1',

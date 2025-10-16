@@ -4,7 +4,7 @@
   import '@xyflow/svelte/dist/style.css';
 
   import DialogueNode from './nodes/DialogueNode.svelte';
-  import { sampleGraph } from './models/sampleGraph';
+  import { sampleGraph } from './data/sampleGraph';
   import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
 
   // Convert our DialogueGraph model into flow data
@@ -19,8 +19,8 @@
 </script>
 
 <div class="graph-container">
-  <!-- The bind:props let us edit the graph interactively -->
-  <SvelteFlow {nodes} {edges} {nodeTypes} fitView>
+  <!-- The bind:props let us edit the graph links interactively -->
+  <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView>
     <Background />
     <MiniMap />
     <Controls />

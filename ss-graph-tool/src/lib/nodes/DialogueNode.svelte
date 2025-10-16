@@ -1,3 +1,4 @@
+<!-- This file holds the ui model for a dialogue node, which is different than the one in dialogueTypes.ts -->
 <script lang="ts">
   import { Handle, Position, type NodeProps } from '@xyflow/svelte';
 

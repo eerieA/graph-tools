@@ -7,7 +7,8 @@ export function adaptDialogueGraphToFlow(graph: DialogueGraph): {
 } {
   const nodes: Node[] = graph.nodes.map((n) => ({
     id: n.id,
-    type: 'dialogueNode', // must match the custom node name registered in SvelteFlow
+    // must match the custom node name registered in SvelteFlow, e.g. in ./src/lib/DialogueGraphEditor.svelte
+    type: 'dialogueNode',
     position: { x: Math.random() * 400, y: Math.random() * 300 },
     data: {
       speaker: n.speaker,
