@@ -1,28 +1,61 @@
-import type { DialogueGraph } from '../models/dialogueTypes';
+import type { DialogueGraph, DialogueNode, DialogueLink } from '../models/dialogueTypes';
 import type { Node, Edge } from '@xyflow/svelte';
 
+/**
+ * Convert a DialogueGraph (domain model) into a structure that Svelte Flow can render.
+ * Adds all relevant DialogueNode fields to each node's `data`,
+ * and transforms DialogueLink into Svelte Flow-compatible edges.
+ */
 export function adaptDialogueGraphToFlow(graph: DialogueGraph): {
   nodes: Node[];
   edges: Edge[];
 } {
-  const nodes: Node[] = graph.nodes.map((n) => ({
+  // Map DialogueNodes to Svelte Flow nodes
+  const nodes: Node[] = graph.nodes.map((n: DialogueNode) => ({
     id: n.id,
     // must match the custom node name registered in SvelteFlow, e.g. in ./src/lib/DialogueGraphEditor.svelte
     type: 'dialogueNode',
-    position: { x: Math.random() * 400, y: Math.random() * 300 },
+    position: {
+      // Randomized layout for now; could be replaced with saved layout later
+      x: Math.random() * 400,
+      y: Math.random() * 300
+    },
     data: {
+      // core fields
       speaker: n.speaker,
       text: n.text,
-    },
-  }));
+      // extended dialogue fields
+      conditions_in: n.conditions_in ?? [],
+      events_out: n.events_out ?? [],
+      choices: n.choices ?? [],
+      next_node: n.next_node,
+      tags: n.tags ?? [],
+      // computed metadata
+      isEntry: n.id === graph.entry_node
+    }
+  }))
 
-  const edges: Edge[] = graph.links.map((l) => ({
-    id: l.id,
-    source: l.prev_node,   // Svelte Flow expects these names
-    target: l.next_node,
-    type: 'default',       // could later be customized (conditional, choice, etc.)
-    label: l.text ?? '',
-  }));
+  // Map DialogueLinks to Svelte Flow edges
+  const edges: Edge[] = graph.links.map((l: DialogueLink) => {
+    // Choose edge style/type based on link type
+    let edgeStyle = 'default'
+    if (l.type === 'Conditional') edgeStyle = 'step'
+    else if (l.type === 'Choice') edgeStyle = 'bezier'
+
+    return {
+      id: l.id,
+      source: l.prev_node,
+      target: l.next_node,
+      type: edgeStyle,
+      label: l.text ?? '',
+      data: {
+        type: l.type,
+        conditions_in: l.conditions_in ?? [],
+        events_out: l.events_out ?? []
+      },
+      animated: l.type === 'Linear' // small visual cue: linear = animated line
+    };
+  })
 
   return { nodes, edges };
 }
