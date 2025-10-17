@@ -1,4 +1,14 @@
-# Notes on defining custom nodes and edges
+<!-- TOC -->
+
+- [On defining custom nodes and edges](#on-defining-custom-nodes-and-edges)
+    - [dialogueTypes.ts are Domain Models](#dialoguetypests-are-domain-models)
+    - [DialogueNode.svelte (and similar) are view/UI components](#dialoguenodesvelte-and-similar-are-viewui-components)
+    - [adaptDialogueGraphToFlow.ts is data mapper](#adaptdialoguegraphtoflowts-is-data-mapper)
+- [Why useOnSelectionChange in a Helper Component (Details Side Panel)](#why-useonselectionchange-in-a-helper-component-details-side-panel)
+
+<!-- /TOC -->
+
+# On defining custom nodes and edges
 
 Rough summary:
 
@@ -47,5 +57,44 @@ It only knows Node and Edge objects with { id, data, position } and { id, source
 
 So this function handles that translation:
 
-- Takes a DialogueGraph from your game logic layer.
+- Takes a DialogueGraph from our game logic layer.
 - Produces arrays of Node and Edge objects that the editor can render.
+
+# Why useOnSelectionChange in a Helper Component (Details Side Panel)
+
+The goal was to detect when a node is being selected, and display some details carried on that node in a side panel. For that we decided to use `useOnSelectionChange`.
+
+But, if we call `useOnSelectionChange` in the same component who also creates \<SvelteFlow\>, errors will occur. This is  useStore (and therefore useOnSelectionChange) needs the Svelte Flow context to exist before we call it. You attempted to call the hook from the same component that creates \<SvelteFlow\>, but the hook ran too early (module init), before the provider/context was available - so Svelte Flow complained.
+
+✅ 1. useOnSelectionChange in a Helper Component
+
+Works because:
+- It’s a hook designed to listen to Flow’s internal event system, not DOM events.
+- It must be called inside the context of a \<SvelteFlow /\> instance (i.e., within its provider).
+- By placing it in a child component that’s rendered inside \<SvelteFlow\>, it gains access to that context.
+- When a node is clicked, Svelte Flow updates its internal selection store, and this hook receives that update.
+
+Result:
+✔️ Reacts reliably to node selection (including clicks and deselections).
+
+❌ 2. useOnSelectionChange in the Same Component as \<SvelteFlow\>
+
+Does not work because:
+- When called at the same level as \<SvelteFlow\>, the hook executes before a Flow context exists.
+- The error “To call useStore outside of \<SvelteFlow /\> we need to wrap our component in a \<SvelteFlowProvider /\> confirms that it’s outside the provider scope.
+- In this situation, the hook has no access to the internal store, so it throws or silently fails.
+
+Result:
+⚠️ Crashes or fails to respond - no Flow context yet exists.
+
+❌ 3. on:nodeclick={handleNodeClick}
+
+Does not work because:
+- \<SvelteFlow\> does not emit a nodeclick event as a Svelte custom event.
+- Svelte’s on:event syntax only works if the component explicitly calls dispatch('eventName').
+- Since @xyflow/svelte doesn’t define or dispatch nodeclick, Svelte never receives anything to handle.
+
+Also note that although the general Svelte event `onClick` does react to a node click, it does not emit info about a Svelte Flow node. So we still need something that is Svelte Flow native.
+
+Result:
+🚫 No event ever fires - nothing printed to console.

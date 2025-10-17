@@ -644,7 +644,7 @@ A group object that has a set of SurrBarkNode objects, each holding a inner voic
 
     `AudioRouter`:
     - Sends to `inner` binaural channel.
-    - Applies `DuckIfBusy` — other channels (e.g., ambient, dialogue) get minor volume dip.
+    - Applies `DuckIfBusy` - other channels (e.g., ambient, dialogue) get minor volume dip.
 
     `UIController`:
     - Displays subtitle:
@@ -722,11 +722,11 @@ Simplified.
 | Time | Event                       | Sender         | Receiver                           |
 | ---- | --------------------------- | -------------- | ---------------------------------- |
 | t0   | `OnGroupBarkStart(sbg3746)` | BarkArbitrator | UIController (to hide choices)     |
-| t0   | `OnBarkStart(sbn364)`       | AudioRouter    | —                                  |
+| t0   | `OnBarkStart(sbn364)`       | AudioRouter    | -                                  |
 | t2.4 | `OnBarkEnd(sbn364)`         | AudioRouter    | BarkArbitrator                     |
-| t2.4 | `OnBarkStart(sbn465973)`    | AudioRouter    | —                                  |
+| t2.4 | `OnBarkStart(sbn465973)`    | AudioRouter    | -                                  |
 | t5.1 | `OnBarkEnd(sbn465973)`      | AudioRouter    | BarkArbitrator                     |
-| t5.2 | `OnBarkStart(sbn43745)`     | AudioRouter    | —                                  |
+| t5.2 | `OnBarkStart(sbn43745)`     | AudioRouter    | -                                  |
 | t7.0 | `OnBarkEnd(sbn43745)`       | AudioRouter    | BarkArbitrator                     |
 | t7.1 | `OnAllBarkEnd(sbg3746)`     | BarkArbitrator | UIController, ConversationInstance |
 
