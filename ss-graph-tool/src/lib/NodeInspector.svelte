@@ -1,4 +1,3 @@
-<!-- src/lib/NodeInspector.svelte -->
 <script lang="ts">
   import type { Node } from '@xyflow/svelte';
 
@@ -7,7 +6,8 @@
 
 <aside class="inspector">
   {#if selectedNode}
-    <h3>Selected Node</h3>
+    <h3>Node Details</h3>
+    <hr>
 
     <div class="field">
       <div class="field-label">ID</div>
@@ -17,7 +17,11 @@
     {#each Object.entries(selectedNode.data ?? {}) as [key, value]}
       <div class="field">
         <div class="field-label">{key}</div>
-        <span>{typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</span>
+        {#if typeof value === 'object'}
+          <pre class="field-value">{JSON.stringify(value, null, 2)}</pre>
+        {:else}
+          <span class="field-value">{value}</span>
+        {/if}
       </div>
     {/each}
   {:else}
@@ -41,14 +45,29 @@
   }
 
   .field {
-    margin-bottom: 0.6em;
+    margin-bottom: 0.8em;
   }
 
   .field-label {
     display: block;
     font-size: 14px;
+    font-weight: 600;
     color: #999;
     margin-bottom: 2px;
+  }
+
+  .field-value {
+    display: block;
+    font-size: 16px;
+    color: #ddd;
+    word-break: break-word;
+    padding-left: 8px; /* slight indentation for readability */
+  }
+
+  .field-value pre {
+    margin: 0;
+    font-family: monospace; /* make nested JSON easier to read */
+    white-space: pre-wrap; /* wrap long lines */
   }
 
   span {
