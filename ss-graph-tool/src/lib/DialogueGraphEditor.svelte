@@ -14,6 +14,7 @@
   import SelectionSubscriber from './SelectionSubscriber.svelte';
   import { sampleGraph } from './data/sampleGraph';
   import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
+  import NodeInspector from './NodeInspector.svelte';
 
   const { nodes: initialNodes, edges: initialEdges } = adaptDialogueGraphToFlow(sampleGraph);
   const nodeTypes = { dialogueNode: DialogueNode };
@@ -108,7 +109,7 @@
   }
 
   // Called from SelectionSubscriber via prop
-  function onNodeSelected(node: Node) {
+  function handleSelect(node: Node) {
     selectedNode = node;
     console.log('SelectionSubscriber forwarded node:', node);
   }
@@ -116,27 +117,19 @@
 
 <SvelteFlowProvider>
   <div style="display:flex; height:100vh;">
-    <div style="flex:1;">
-      <div style="width:100%; height:100%;">
-        <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView on:connect={handleConnect}>
-          <Background />
-          <MiniMap />
-          <Controls />
-        </SvelteFlow>
-      </div>
+    <div style="width:100%; height:100%;">
+      <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView on:connect={handleConnect}>
+        <Background />
+        <MiniMap />
+        <Controls />
+      </SvelteFlow>
     </div>
 
     <aside style="width:280px; background:#1d1d1d; color:#ddd; padding:12px;">
-      <SelectionSubscriber onSelect={onNodeSelected} />
-
-      {#if selectedNode}
-        <h3>Selected Node</h3>
-        <p><strong>ID:</strong> {selectedNode.id}</p>
-        <p><strong>Speaker:</strong> {selectedNode.data.speaker ?? 'Unknown'}</p>
-        <p><strong>Text:</strong> {selectedNode.data.text}</p>
-      {:else}
-        <p class="empty">Click a node to view details.</p>
-      {/if}
+      <!-- Listen to selection changes -->
+      <SelectionSubscriber onSelect={handleSelect} />
+      <!-- Side panel -->
+      <NodeInspector {selectedNode} />
     </aside>
   </div>
 </SvelteFlowProvider>
@@ -162,10 +155,5 @@
     font-size: 10px;
     font-family: system-ui;
     color: #ccc;
-  }
-
-  .empty {
-    color: #777;
-    font-style: italic;
   }
 </style>
