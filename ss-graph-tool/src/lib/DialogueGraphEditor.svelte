@@ -1,8 +1,17 @@
 <script lang="ts">
-  import { SvelteFlow, Background, Controls, MiniMap, type Node, type Edge } from '@xyflow/svelte';
+  import {
+    SvelteFlow,
+    SvelteFlowProvider,
+    Background,
+    Controls,
+    MiniMap,
+    type Node,
+    type Edge,
+  } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
 
   import DialogueNode from './nodes/DialogueNode.svelte';
+  import SelectionSubscriber from './SelectionSubscriber.svelte';
   import { sampleGraph } from './data/sampleGraph';
   import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
 
@@ -11,6 +20,7 @@
 
   let nodes: Node[] = initialNodes;
   let edges: Edge[] = initialEdges;
+  let selectedNode: Node | null = null;
 
   // ---------- simple toast ----------
   let warning: string | null = null;
@@ -96,29 +106,46 @@
       edges = [...edges, { id: genEdgeId(), source, target, label: label ?? '', type: 'default' }];
     }
   }
+
+  // Called from SelectionSubscriber via prop
+  function onNodeSelected(node: Node) {
+    selectedNode = node;
+    console.log('SelectionSubscriber forwarded node:', node);
+  }
 </script>
 
-<div class="graph-container">
-  <!-- bind nodes/edges so the editor mutates them live -->
-  <!-- intercept connect with on:connect -->
-  <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView on:connect={handleConnect}>
-    <Background />
-    <MiniMap />
-    <Controls />
-  </SvelteFlow>
-</div>
+<SvelteFlowProvider>
+  <div style="display:flex; height:100vh;">
+    <div style="flex:1;">
+      <div style="width:100%; height:100%;">
+        <SvelteFlow bind:nodes bind:edges {nodeTypes} fitView on:connect={handleConnect}>
+          <Background />
+          <MiniMap />
+          <Controls />
+        </SvelteFlow>
+      </div>
+    </div>
+
+    <aside style="width:280px; background:#1d1d1d; color:#ddd; padding:12px;">
+      <SelectionSubscriber onSelect={onNodeSelected} />
+
+      {#if selectedNode}
+        <h3>Selected Node</h3>
+        <p><strong>ID:</strong> {selectedNode.id}</p>
+        <p><strong>Speaker:</strong> {selectedNode.data.speaker ?? 'Unknown'}</p>
+        <p><strong>Text:</strong> {selectedNode.data.text}</p>
+      {:else}
+        <p class="empty">Click a node to view details.</p>
+      {/if}
+    </aside>
+  </div>
+</SvelteFlowProvider>
 
 {#if warning}
   <div class="toast">{warning}</div>
 {/if}
 
 <style>
-  .graph-container {
-    width: 100vw;
-    height: 100vh;
-    background: #121212;
-  }
-
   .toast {
     position: fixed;
     right: 20px;
@@ -135,5 +162,10 @@
     font-size: 10px;
     font-family: system-ui;
     color: #ccc;
+  }
+
+  .empty {
+    color: #777;
+    font-style: italic;
   }
 </style>
