@@ -1,14 +1,18 @@
-import type { DialogueGraph, DialogueNode, DialogueLink } from '../models/dialogueTypes';
-import type { Node, Edge } from '@xyflow/svelte';
+import type {
+  DialogueGraph,
+  DialogueNode,
+  DialogueLink
+} from '../models/dialogueTypes'
+import type { Node, Edge } from '@xyflow/svelte'
 
 /**
  * Convert a DialogueGraph (domain model) into a structure that Svelte Flow can render.
  * Adds all relevant DialogueNode fields to each node's `data`,
  * and transforms DialogueLink into Svelte Flow-compatible edges.
  */
-export function adaptDialogueGraphToFlow(graph: DialogueGraph): {
-  nodes: Node[];
-  edges: Edge[];
+export function adaptDialogueGraphToFlow (graph: DialogueGraph): {
+  nodes: Node[]
+  edges: Edge[]
 } {
   // Map DialogueNodes to Svelte Flow nodes
   const nodes: Node[] = graph.nodes.map((n: DialogueNode) => ({
@@ -47,6 +51,12 @@ export function adaptDialogueGraphToFlow(graph: DialogueGraph): {
       source: l.prev_node,
       target: l.next_node,
       type: edgeStyle,
+      markerEnd: {
+        type: 'arrow',
+        color: '#aaa',
+        width: 20,
+        height: 20
+      },
       label: l.text ?? '',
       data: {
         type: l.type,
@@ -54,8 +64,8 @@ export function adaptDialogueGraphToFlow(graph: DialogueGraph): {
         events_out: l.events_out ?? []
       },
       animated: l.type === 'Linear' // small visual cue: linear = animated line
-    };
+    }
   })
 
-  return { nodes, edges };
+  return { nodes, edges }
 }
