@@ -42,8 +42,8 @@ export function adaptDialogueGraphToFlow (graph: DialogueGraph): {
   // Map DialogueLinks to Svelte Flow edges
   const edges: Edge[] = graph.links.map((l: DialogueLink) => {
     // Choose edge style/type based on link type
-    let edgeStyle = 'default'
-    if (l.type === 'Conditional') edgeStyle = 'step'
+    let edgeStyle = 'bezier'
+    if (l.type === 'Conditional') edgeStyle = 'straight'
     else if (l.type === 'Choice') edgeStyle = 'bezier'
 
     return {

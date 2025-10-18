@@ -45,9 +45,9 @@
       {#if data.events_out?.length}
         <span class="meta-item" title="Events on activation">🎬 {data.events_out.length}</span>
       {/if}
-      {#if data.choices?.length}
+      <!-- {#if data.choices?.length}
         <span class="meta-item" title="Player choices">🌿 {data.choices.length}</span>
-      {/if}
+      {/if} -->
     </div>
   </div>
 
