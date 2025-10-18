@@ -1,23 +1,35 @@
 <script lang="ts">
-  import type { Node } from '@xyflow/svelte';
-  import nodeIcon from './assets/node.png';
-  export let selectedNode: Node | null = null;
+  import type { Edge } from '@xyflow/svelte';
+  import edgeIcon from './assets/edge.png';
+  export let selectedEdge: Edge | null = null;
 </script>
 
 <aside class="inspector">
-  {#if selectedNode}
+  {#if selectedEdge}
     <h3>
-      <img src={nodeIcon} alt="Node Icon" class="icon" />
-      Node Details
+      <img src={edgeIcon} alt="Edge Icon" class="icon" />
+        Edge Details
     </h3>
     <hr />
 
     <div class="field">
       <div class="field-label">ID</div>
-      <span>{selectedNode.id}</span>
+      <span>{selectedEdge.id}</span>
     </div>
 
-    {#each Object.entries(selectedNode.data ?? {}) as [key, value]}
+    <div class="field">
+      <div class="field-label">Source → Target</div>
+      <span>{selectedEdge.source} → {selectedEdge.target}</span>
+    </div>
+
+    {#if selectedEdge.label}
+      <div class="field">
+        <div class="field-label">Label</div>
+        <span>{selectedEdge.label}</span>
+      </div>
+    {/if}
+
+    {#each Object.entries(selectedEdge.data ?? {}) as [key, value]}
       <div class="field">
         <div class="field-label">{key}</div>
         {#if typeof value === 'object'}

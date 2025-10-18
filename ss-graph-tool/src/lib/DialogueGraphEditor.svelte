@@ -15,6 +15,7 @@
   import { sampleGraph } from './data/sampleGraph';
   import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
   import NodeInspector from './NodeInspector.svelte';
+  import EdgeInspector from './EdgeInspector.svelte';
 
   const { nodes: initialNodes, edges: initialEdges } = adaptDialogueGraphToFlow(sampleGraph);
   const nodeTypes = { dialogueNode: DialogueNode };
@@ -22,6 +23,7 @@
   let nodes: Node[] = initialNodes;
   let edges: Edge[] = initialEdges;
   let selectedNode: Node | null = null;
+  let selectedEdge: Edge | null = null;
 
   // ---------- simple toast ----------
   let warning: string | null = null;
@@ -109,9 +111,12 @@
   }
 
   // Called from SelectionSubscriber via prop
-  function handleSelect(node: Node) {
+  function handleNodeSelect(node: Node | null) {
     selectedNode = node;
-    console.log('SelectionSubscriber forwarded node:', node);
+  }
+
+  function handleEdgeSelect(edge: Edge | null) {
+    selectedEdge = edge;
   }
 </script>
 
@@ -127,9 +132,15 @@
 
     <aside style="width:280px; background:#1d1d1d; color:#ddd; padding:12px;">
       <!-- Listen to selection changes -->
-      <SelectionSubscriber onSelect={handleSelect} />
+      <SelectionSubscriber onSelectNode={handleNodeSelect} onSelectEdge={handleEdgeSelect} />
       <!-- Side panel -->
-      <NodeInspector {selectedNode} />
+      {#if selectedNode}
+        <NodeInspector {selectedNode} />
+      {:else if selectedEdge}
+        <EdgeInspector {selectedEdge} />
+      {:else}
+        <p class="empty">Click a node or edge to view details.</p>
+      {/if}
     </aside>
   </div>
 </SvelteFlowProvider>
@@ -155,5 +166,10 @@
     font-size: 10px;
     font-family: system-ui;
     color: #ccc;
+  }
+  
+  .empty {
+    color: #777;
+    font-style: italic;
   }
 </style>
