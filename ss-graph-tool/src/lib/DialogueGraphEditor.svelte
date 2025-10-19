@@ -127,7 +127,7 @@
 
   // ---------- reactively detects node changes ----------
 
-  $: if (nodes) {
+  $: if (nodes && nodes.length) {
     const changed = nodes.some((n) => {
       const prev = prevPositions[n.id];
       return !prev || prev.x !== n.position.x || prev.y !== n.position.y;
@@ -139,10 +139,10 @@
       for (const n of nodes) {
         newPositions[n.id] = { x: n.position.x, y: n.position.y };
       }
+
       nodePositions.set(newPositions);
       prevPositions = newPositions;
-
-      console.log('💾 Saved node positions:', newPositions);
+      // console.log('Updated node positions in store:', newPositions);
     }
   }
 </script>
