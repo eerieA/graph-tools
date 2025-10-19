@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ss-graph-tool",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.example.ssgraphtool",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173",
