@@ -1,5 +1,5 @@
-// src/lib/storage/graphLayoutStore.ts
 import { writable, type Writable } from 'svelte/store'
+import { invoke } from '@tauri-apps/api/core'
 
 export type NodePositions = Record<string, { x: number; y: number }>
 
@@ -12,33 +12,78 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay = 300): T {
   }) as T
 }
 
-let initial: NodePositions = {}
+// Writable store
+export const nodePositions: Writable<NodePositions> = writable({})
 
-// Only read from localStorage if we're in the browser
-if (typeof window !== 'undefined') {
-  const stored = localStorage.getItem('nodePositions')
-  if (stored) {
-    try {
-      initial = JSON.parse(stored)
-    } catch (err) {
-      console.warn('Failed to parse stored node positions:', err)
-    }
-  }
+// internal loaded flag & promise so callers can await initial load
+let _loaded = false
+let _loadPromise: Promise<void> | null = null
+
+export function isLoaded () {
+  return _loaded
 }
 
-export const nodePositions: Writable<NodePositions> = writable(initial)
+/**
+ * Asynchronously load positions from disk (Tauri backend).
+ * Safe to call multiple times; returns same promise while loading.
+ */
+export function loadPositions (): Promise<void> {
+  if (_loaded) return Promise.resolve()
+  if (_loadPromise) return _loadPromise
 
-// Only write to localStorage if we're in the browser
-// Debounced save with a reasonable time interval
-if (typeof window !== 'undefined') {
-  const saveToLocalStorage = debounce((val: NodePositions) => {
-    try {
-      localStorage.setItem('nodePositions', JSON.stringify(val))
-      console.log('💾 Saved node positions (debounced)');
-    } catch (err) {
-      console.warn('Failed to save node positions:', err)
+  _loadPromise = (async () => {
+    // Only run in browser / Tauri environment
+    if (typeof window === 'undefined') {
+      // SSR or build: nothing to do
+      _loaded = true
+      return
     }
-  }, 300)
 
-  nodePositions.subscribe(saveToLocalStorage)
+    try {
+      const json = await invoke<string>('load_layout_from_disk')
+      if (json && json.length > 0) {
+        try {
+          const parsed: NodePositions = JSON.parse(json)
+          nodePositions.set(parsed)
+          console.log('✅ Loaded node positions from disk')
+        } catch (parseErr) {
+          console.warn('Failed to parse node positions JSON:', parseErr)
+          nodePositions.set({})
+        }
+      } else {
+        // no file yet, set empty
+        nodePositions.set({})
+        console.log('No saved node positions on disk (first run)')
+      }
+    } catch (err) {
+      // invocation failed (no file or other error). initialize empty.
+      console.warn('load_layout_from_disk invoke failed:', err)
+      nodePositions.set({})
+    } finally {
+      _loaded = true
+    }
+  })()
+
+  return _loadPromise
+}
+
+// --- Save to disk (debounced) ---
+const saveToDisk = debounce(async (val: NodePositions) => {
+  if (typeof window === 'undefined') return // guard
+  try {
+    await invoke('save_layout_to_disk', {
+      jsonData: JSON.stringify(val, null, 2)
+    })
+    console.log('💾 Saved node positions to disk');
+  } catch (err) {
+    console.error('Failed to save node positions to disk:', err)
+  }
+}, 300)
+
+// Subscribe to store changes to trigger save (only in browser)
+if (typeof window !== 'undefined') {
+  nodePositions.subscribe(val => {
+    // if not loaded yet, still safe, bcz save will persist whatever value is set.
+    saveToDisk(val)
+  })
 }

@@ -14,20 +14,24 @@
   import SelectionSubscriber from './SelectionSubscriber.svelte';
   import NodeInspector from './NodeInspector.svelte';
   import EdgeInspector from './EdgeInspector.svelte';
-  import { nodePositions } from './storage/graphLayoutStore';
+  import { nodePositions, loadPositions } from './storage/graphLayoutStore';
   import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
   import { sampleGraph } from './data/sampleGraph';
+  import { onMount } from 'svelte';
 
-  const { nodes: initialNodes, edges: initialEdges } = adaptDialogueGraphToFlow(sampleGraph);
   const nodeTypes = { dialogueNode: DialogueNode };
 
-  let nodes: Node[] = initialNodes;
-  let edges: Edge[] = initialEdges;
+  // Will be assigned once we load the layout
+  let nodes: Node[] = [];
+  let edges: Edge[] = [];
+
   // For detecting selected node or edge
   let selectedNode: Node | null = null;
   let selectedEdge: Edge | null = null;
-  // For saving positions reactively when nodes change
   let prevPositions: Record<string, { x: number; y: number }> = {};
+
+  // For cycle prevention
+  let prevEdges: Edge[] = [];
 
   // ---------- simple toast ----------
   let warning: string | null = null;
@@ -67,8 +71,6 @@
   }
 
   // ---------- edge cycle prevention ----------
-  let prevEdges: Edge[] = initialEdges.map((e) => ({ ...e }));
-
   $: if (edges) {
     // detect newly added edges
     const added = edges.filter((e) => !prevEdges.some((pe) => pe.id === e.id));
@@ -100,6 +102,23 @@
   function genEdgeId() {
     return `edge_${Date.now().toString(36)}_${Math.floor(Math.random() * 1000)}`;
   }
+
+  // onMount: await for layout to load bcz it is async, then adapt graph and initialize nodes and edges
+  // If we don't use onMount to await for the positions, the saved json file will not be read in time
+  onMount(async () => {
+    await loadPositions();
+    const adapted = adaptDialogueGraphToFlow(sampleGraph);
+    nodes = adapted.nodes;
+    edges = adapted.edges;
+
+    // Seed prevPositions for saving
+    prevPositions = Object.fromEntries(
+      nodes.map((n) => [n.id, { x: n.position.x, y: n.position.y }])
+    );
+
+    // Seed prevEdges for cycle prevention
+    prevEdges = edges.map((e) => ({ ...e }));
+  });
 
   // ---------- event handlers ----------
 
