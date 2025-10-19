@@ -4,7 +4,8 @@
     - [dialogueTypes.ts are Domain Models](#dialoguetypests-are-domain-models)
     - [DialogueNode.svelte (and similar) are view/UI components](#dialoguenodesvelte-and-similar-are-viewui-components)
     - [adaptDialogueGraphToFlow.ts is data mapper](#adaptdialoguegraphtoflowts-is-data-mapper)
-- [Why useOnSelectionChange in a Helper Component (Details Side Panel)](#why-useonselectionchange-in-a-helper-component-details-side-panel)
+- [Why useOnSelectionChange in a helper component for the side panel](#why-useonselectionchange-in-a-helper-component-for-the-side-panel)
+- [Dialogue Graph UI Layout Persistence (Svelte Flow + Svelte Store)](#dialogue-graph-ui-layout-persistence-svelte-flow--svelte-store)
 
 <!-- /TOC -->
 
@@ -60,7 +61,7 @@ So this function handles that translation:
 - Takes a DialogueGraph from our game logic layer.
 - Produces arrays of Node and Edge objects that the editor can render.
 
-# Why useOnSelectionChange in a Helper Component (Details Side Panel)
+# Why useOnSelectionChange in a helper component for the side panel
 
 The goal was to detect when a node is being selected, and display some details carried on that node in a side panel. For that we decided to use `useOnSelectionChange`.
 
@@ -98,3 +99,26 @@ Also note that although the general Svelte event `onClick` does react to a node 
 
 Result:
 🚫 No event ever fires - nothing printed to console.
+
+# Dialogue Graph UI Layout Persistence (Svelte Flow + Svelte Store)
+
+When a user drags and repositions nodes in the graph editor, the updated coordinates are automatically stored in localStorage.
+
+On the next app launch, the layout is restored from that data, ensuring consistent node positions across sessions.
+
+**Data Flow Summary**
+
+| Step | Trigger                     | Action                                       | Effect                                        | file |
+| ---- | --------------------------- | -------------------------------------------- | --------------------------------------------- | ----------- |
+| 1️⃣  | User drags and drops a node | `SvelteFlow` updates the bound `nodes` array | `$:` reactive block detects changed positions | DialogueGraphEditor.ts
+| 2️⃣  | `$:` block executes         | Calls `nodePositions.set(newPositions)`      | Updates the Svelte store                      | DialogueGraphEditor.ts |
+| 3️⃣  | Store subscription fires    | Writes new layout to `localStorage`          | Persists node coordinates                     | graphLayoutStore.ts |
+| 4️⃣  | App reloads                 | Store initializes from `localStorage`        | Graph layout is restored                      | graphAdapter.ts |
+
+**End-to-End Behavior**
+
+1. The user moves a node.
+1. SvelteFlow updates the nodes array (reactive variable).
+1. $: block detects coordinate change → updates nodePositions store.
+1. Store subscription writes to localStorage.
+1. On next load, saved positions are restored automatically.
