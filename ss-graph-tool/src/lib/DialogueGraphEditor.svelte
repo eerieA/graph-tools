@@ -12,18 +12,22 @@
 
   import DialogueNode from './nodes/DialogueNode.svelte';
   import SelectionSubscriber from './SelectionSubscriber.svelte';
-  import { sampleGraph } from './data/sampleGraph';
-  import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
   import NodeInspector from './NodeInspector.svelte';
   import EdgeInspector from './EdgeInspector.svelte';
+  import { nodePositions } from './storage/graphLayoutStore';
+  import { adaptDialogueGraphToFlow } from './utils/graphAdapter';
+  import { sampleGraph } from './data/sampleGraph';
 
   const { nodes: initialNodes, edges: initialEdges } = adaptDialogueGraphToFlow(sampleGraph);
   const nodeTypes = { dialogueNode: DialogueNode };
 
   let nodes: Node[] = initialNodes;
   let edges: Edge[] = initialEdges;
+  // For detecting selected node or edge
   let selectedNode: Node | null = null;
   let selectedEdge: Edge | null = null;
+  // For saving positions reactively when nodes change
+  let prevPositions: Record<string, { x: number; y: number }> = {};
 
   // ---------- simple toast ----------
   let warning: string | null = null;
@@ -97,6 +101,8 @@
     return `edge_${Date.now().toString(36)}_${Math.floor(Math.random() * 1000)}`;
   }
 
+  // ---------- event handlers ----------
+
   // Called when SvelteFlow emits a "connect" event (user links two handles)
   // e.detail should contain { source, target, sourceHandle, targetHandle }
   function handleConnect(evt: CustomEvent) {
@@ -117,6 +123,27 @@
 
   function handleEdgeSelect(edge: Edge | null) {
     selectedEdge = edge;
+  }
+
+  // ---------- reactively detects node changes ----------
+
+  $: if (nodes) {
+    const changed = nodes.some((n) => {
+      const prev = prevPositions[n.id];
+      return !prev || prev.x !== n.position.x || prev.y !== n.position.y;
+    });
+
+    if (changed) {
+      // Update storage
+      const newPositions: Record<string, { x: number; y: number }> = {};
+      for (const n of nodes) {
+        newPositions[n.id] = { x: n.position.x, y: n.position.y };
+      }
+      nodePositions.set(newPositions);
+      prevPositions = newPositions;
+
+      console.log('💾 Saved node positions:', newPositions);
+    }
   }
 </script>
 
@@ -167,7 +194,7 @@
     font-family: system-ui;
     color: #ccc;
   }
-  
+
   .empty {
     color: #777;
     font-style: italic;

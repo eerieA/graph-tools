@@ -4,6 +4,9 @@ import type {
   DialogueLink
 } from '../models/dialogueTypes'
 import type { Node, Edge } from '@xyflow/svelte'
+import { get } from 'svelte/store'
+
+import { nodePositions } from '$lib/storage/graphLayoutStore'
 
 /**
  * Convert a DialogueGraph (domain model) into a structure that Svelte Flow can render.
@@ -14,13 +17,15 @@ export function adaptDialogueGraphToFlow (graph: DialogueGraph): {
   nodes: Node[]
   edges: Edge[]
 } {
+  // Get saved node positions if any
+  const savedPositions = get(nodePositions)
+
   // Map DialogueNodes to Svelte Flow nodes
   const nodes: Node[] = graph.nodes.map((n: DialogueNode) => ({
     id: n.id,
     // must match the custom node name registered in SvelteFlow, e.g. in ./src/lib/DialogueGraphEditor.svelte
     type: 'dialogueNode',
-    position: {
-      // Randomized layout for now; could be replaced with saved layout later
+    position: savedPositions[n.id] ?? {
       x: Math.random() * 400,
       y: Math.random() * 300
     },
