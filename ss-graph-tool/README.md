@@ -2,28 +2,82 @@
 
 An external dialogue graph visualization tool for project SS.
 
+<!-- TOC -->
+
+- [SS graph tool](#ss-graph-tool)
+    - [Developing](#developing)
+    - [Building](#building)
+        - [Cleaning built files](#cleaning-built-files)
+    - [Notes](#notes)
+    - [Linting](#linting)
+
+<!-- /TOC -->
+
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Follow these steps to set up the project locally:
 
-```sh
-npm run dev
+1. Prerequisites
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+    Have the following installed:
+
+    - Node.js (v24.10.0 recommended) and npm or pnpm
+    - Rust toolchain (stable)
+    - Tauri prerequisites:
+        - Windows: Visual Studio with “Desktop development with C++” workload
+        - macOS: Xcode Command Line Tools
+        - Linux: libwebkit2gtk-4.0-dev, build-essential, pkg-config, curl
+1. Install frontend dependencies
+    ```
+    pnpm install
+    ```
+    or
+    ```
+    npm install
+    ```
+    or equivalent.
+
+1. Run the development server
+    ```
+    pnpm run tauri:dev
+    ```
+    or equivalent for `npm` etc.
+
+    Then:
+    - The Svelte app will be served locally (usually http://localhost:5173/ by default)
+    - The Tauri window will open automatically
+    - Any changes you make to Svelte or Rust code will hot-reload
 
 ## Building
 
-To create a production version of your app:
+To create a production version:
 
 ```sh
-npm run build
+pnpm run tauri:build
 ```
 
-You can preview the production build with `npm run preview`.
+or equivalent for `npm` etc.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Output binaries will be in src-tauri/target/release/
+
+The app is self-contained; users do not need Node.js or Rust installed.
+
+### Cleaning built files
+
+If want to clean intermediate files, built files and artifacts, use a script defined in package.json like this:
+
+```
+pnpm tauri:clean
+```
+
+## Notes
+
+- Node positions and layout are persisted automatically to a local JSON file via Tauri
+- For frontend-only testing, you can run:
+    ```
+    pnpm dev
+    ```
+    or equivalent for `npm` etc.
 
 ## Linting
 
