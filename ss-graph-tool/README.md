@@ -72,7 +72,15 @@ pnpm tauri:clean
 
 ## Notes
 
-- Node positions and layout are persisted automatically to a local JSON file via Tauri
+- Node positions and layout are persisted automatically to a local JSON file via Tauri. The file should live in this path
+    ```
+    <platform_user_folder>/ss-graph-tool/nodePositions.json
+    ```
+    .
+    > For example on *Windows* it is usually
+    > ```
+    > C:\Users\<user_name>\AppData\Local\ss-graph-tool\nodePositions.json
+    > ```
 - For frontend-only testing, you can run:
     ```
     pnpm dev
