@@ -107,7 +107,8 @@
   // If we don't use onMount to await for the positions, the saved json file will not be read in time
   onMount(async () => {
     await loadPositions();
-    const adapted = adaptDialogueGraphToFlow(sampleGraph);
+
+    const adapted = await adaptDialogueGraphToFlow(sampleGraph);
     nodes = adapted.nodes;
     edges = adapted.edges;
 

@@ -6,6 +6,7 @@ use std::io;
 use std::path::PathBuf;
 
 use dirs::data_local_dir;
+use nlprule::Tokenizer;
 use tauri::command;
 
 /// Returns the path to the JSON file in the app's local data directory.
@@ -46,11 +47,38 @@ fn load_layout_from_disk() -> Result<String, String> {
     }
 }
 
+/// A simple summarizer that returns the first meaningful sentence trimmed to a limit.
+#[command]
+fn summarize_choice_text(text: String, max_length: Option<usize>) -> String {
+    let max_len = max_length.unwrap_or(60);
+
+    // Create English tokenizer
+    let tokenizer = Tokenizer::new("en").unwrap_or_else(|_| Tokenizer::default());
+
+    // Extract sentence texts into a Vec<String>
+    let sentences: Vec<String> = tokenizer
+        .sentencize(&text)
+        .map(|s| s.text().to_string())
+        .collect();
+
+    // Pick first sentence or fallback
+    let mut summary = sentences.get(0).cloned().unwrap_or_else(|| text.clone());
+
+    // Truncate if too long
+    if summary.len() > max_len {
+        summary.truncate(max_len);
+        summary.push('…');
+    }
+
+    summary
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             save_layout_to_disk,
-            load_layout_from_disk
+            load_layout_from_disk,
+            summarize_choice_text
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

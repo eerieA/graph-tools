@@ -7,16 +7,17 @@ import type { Node, Edge } from '@xyflow/svelte'
 import { get } from 'svelte/store'
 
 import { nodePositions } from '$lib/storage/graphLayoutStore'
+import { summarizeChoiceViaTauri } from './nlpBridge'
 
 /**
  * Convert a DialogueGraph (domain model) into a structure that Svelte Flow can render.
  * Adds all relevant DialogueNode fields to each node's `data`,
  * and transforms DialogueLink into Svelte Flow-compatible edges.
  */
-export function adaptDialogueGraphToFlow (graph: DialogueGraph): {
+export async function adaptDialogueGraphToFlow (graph: DialogueGraph): Promise<{
   nodes: Node[]
   edges: Edge[]
-} {
+}> {
   // Get saved node positions if any
   const savedPositions = get(nodePositions)
 
@@ -46,32 +47,39 @@ export function adaptDialogueGraphToFlow (graph: DialogueGraph): {
   }))
 
   // Map DialogueLinks to Svelte Flow edges
-  const edges: Edge[] = graph.links.map((l: DialogueLink) => {
-    // Choose edge style/type based on link type
-    let edgeStyle = 'bezier'
-    if (l.type === 'Conditional') edgeStyle = 'straight'
-    else if (l.type === 'Choice') edgeStyle = 'bezier'
+  const edges: Edge[] = await Promise.all(
+    graph.links.map(async (l: DialogueLink) => {
+      // Choose edge style/type based on link type
+      let edgeStyle = 'bezier'
+      if (l.type === 'Conditional') edgeStyle = 'straight'
+      else if (l.type === 'Choice') edgeStyle = 'bezier'
 
-    return {
-      id: l.id,
-      source: l.prev_node,
-      target: l.next_node,
-      type: edgeStyle,
-      markerEnd: {
-        type: 'arrow',
-        color: '#aaa',
-        width: 20,
-        height: 20
-      },
-      label: l.text ?? '',
-      data: {
-        type: l.type,
-        conditions_in: l.conditions_in ?? [],
-        events_out: l.events_out ?? []
-      },
-      animated: l.type === 'Linear' // small visual cue: linear = animated line
-    }
-  })
+      const labelText =
+        l.type === 'Choice'
+          ? await summarizeChoiceViaTauri(l.text ?? '')
+          : l.text ?? ''
+
+      return {
+        id: l.id,
+        source: l.prev_node,
+        target: l.next_node,
+        type: edgeStyle,
+        markerEnd: {
+          type: 'arrow',
+          color: '#aaa',
+          width: 20,
+          height: 20
+        },
+        label: labelText,
+        data: {
+          type: l.type,
+          conditions_in: l.conditions_in ?? [],
+          events_out: l.events_out ?? []
+        },
+        animated: l.type === 'Linear' // small visual cue: linear = animated line
+      }
+    })
+  )
 
   return { nodes, edges }
 }
