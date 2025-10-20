@@ -31,6 +31,7 @@ export function adaptDialogueGraphToFlow (graph: DialogueGraph): {
     },
     data: {
       // core fields
+      name: n.name,
       speaker: n.speaker,
       text: n.text,
       // extended dialogue fields

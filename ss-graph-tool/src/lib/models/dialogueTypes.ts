@@ -3,6 +3,7 @@ export type LinkType = 'Linear' | 'Choice' | 'Conditional';
 
 export interface CommonNode {
   id: string;
+  name: string;
   text: string;
   speaker?: string;
   events_out?: string[];

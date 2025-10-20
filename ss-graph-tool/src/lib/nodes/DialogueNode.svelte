@@ -5,6 +5,7 @@
   // Props expected from Svelte Flow
   export let id: string
   export let data: {
+    name: string
     speaker?: string
     text: string
     conditions_in?: string[]
@@ -21,11 +22,12 @@
   <!-- Incoming connection point -->
   <Handle type="target" position={Position.Top} />
 
-  <!-- Speaker + Dialogue -->
+  <!-- name, speaker and dialogue preview -->
+  <div class="name">{data.name ?? '???'}</div>
   <div class="speaker">{data.speaker ?? '???'}</div>
   <div class="text">{data.text}</div>
 
-  <!-- Summary section -->
+  <!-- Summary / tags section -->
   <div class="summary">
     {#if data.tags?.length}
       <div class="tags">
@@ -80,14 +82,20 @@
   }
 
   .dialogue-node.entry {
-    border-color: #66ff99;
-    box-shadow: 0 0 6px #66ff9960;
+    background-color: #468fb1;
+    border-color: #649dcc;
+    box-shadow: 0 0 6px #66faff60;
+  }
+
+  .name {
+    font-weight: 600;
+    font-style: italic;
+    margin-bottom: 4px;
   }
 
   .speaker {
     font-weight: 600;
     color: #ffd580;
-    margin-bottom: 4px;
   }
 
   .text {

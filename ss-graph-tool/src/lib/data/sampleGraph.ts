@@ -13,17 +13,19 @@ import type {
 const nodes: DialogueNode[] = [
   {
     id: '19245',
+    name: 'Start',
     speaker: 'Protagonist',
     text: `I should wake up. Find the Marsh Witch.`,
     conditions_in: [],
     events_out: [],
     choices: [], // will be filled from links below
     next_node: undefined,
-    tags: ['opening', 'dream']
+    tags: ['start']
   },
 
   {
     id: '8',
+    name: 'Go to village',
     speaker: 'Protagonist',
     text: `Alright I'll go to see if Eric got new phials.
 Oh he is on purple fire again... It will die out by itself very soon though.`,
@@ -31,11 +33,12 @@ Oh he is on purple fire again... It will die out by itself very soon though.`,
     events_out: [],
     choices: [],
     next_node: undefined,
-    tags: ['village', 'detour']
+    tags: []
   },
 
   {
     id: '514',
+    name: 'Get rare recipe',
     speaker: 'Eric',
     text: `Thanks [protagonist_name]! I don't have to buy new workwear again.
 Here, I got this recipe from my regular Alchemist from London. I don't
@@ -44,11 +47,12 @@ know how to use it anyway!`,
     events_out: [],
     choices: [],
     next_node: undefined,
-    tags: ['npc', 'gift']
+    tags: []
   },
 
   {
     id: '172',
+    name: 'Seeing Myrtle',
     speaker: 'Myrtle',
     text: `Oh hi [protagonist_name]! Sorry for keeping you waiting. Insomnia.
 I was thinking about visiting you just a while ago.
@@ -57,11 +61,12 @@ You going to London?`,
     events_out: [],
     choices: [],
     next_node: undefined,
-    tags: ['npc', 'quest']
+    tags: []
   },
 
   {
     id: '7182',
+    name: 'Ask info',
     speaker: 'Protagonist',
     text: `Yes. I am selling these herbs.
 {{if ConversationInstance.giving_myrtle_herb == T} Here is one for your insomnia.}
@@ -74,11 +79,12 @@ And I want to talk to that alchemist. Can you tell me the name again?`,
     ],
     choices: [],
     next_node: undefined,
-    tags: ['info', 'branch']
+    tags: []
   },
 
   {
     id: '7183',
+    name: 'Get info 1 high relation',
     speaker: 'Myrtle',
     text: `You've always been so nice to people.`,
     conditions_in: [],
@@ -90,6 +96,7 @@ And I want to talk to that alchemist. Can you tell me the name again?`,
 
   {
     id: '265351',
+    name: 'Get info 1',
     speaker: 'Myrtle',
     text: `Sure! His name is Thomas. Be ware though. His shop is near the palace.`,
     conditions_in: [],
@@ -98,23 +105,25 @@ And I want to talk to that alchemist. Can you tell me the name again?`,
     ],
     choices: [],
     next_node: undefined,
-    tags: ['info', 'quest']
+    tags: []
   },
 
   {
     id: '3543',
+    name: 'Bump into squirrel',
     speaker: 'squirrel',
-    text: `Chik chik. (The squirrel looks a bit scared.)
+    text: `(On the way you see a squirrel.) Chik chik. (The squirrel looks a bit scared.)
 (It holds a tramped-upon berry.)`,
     conditions_in: [],
     events_out: [],
     choices: [],
     next_node: undefined,
-    tags: ['encounter', 'cute']
+    tags: []
   },
 
   {
     id: '6302',
+    name: 'Get info mysterious',
     speaker: 'squirrel',
     text: `{{if ConversationInstance.bumped_fed_squirrel == F}}(A strange squirrel appeared outside the open window, with something in its claws.)
 Eeeeek! (The squirrel squeaked cheerfully.)
@@ -124,11 +133,12 @@ Eeeeek! (The squirrel squeaked cheerfully.)
     events_out: [],
     choices: [],
     next_node: undefined,
-    tags: ['mystery']
+    tags: []
   },
 
   {
     id: 'end',
+    name: 'End 1: go to London',
     speaker: 'Protagonist',
     text: `{{if DialogueSequence.nodeVisited(6302) == T}I'd better be careful if his shop is open then.}
 Thanks. Time to go to London.`,
@@ -139,7 +149,7 @@ Thanks. Time to go to London.`,
     ],
     choices: [],
     next_node: undefined,
-    tags: ['end', 'transition']
+    tags: ['end']
   }
 ]
 
