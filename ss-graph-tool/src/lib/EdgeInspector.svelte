@@ -22,12 +22,12 @@
       <span>{selectedEdge.source} → {selectedEdge.target}</span>
     </div>
 
-    {#if selectedEdge.label}
+    <!-- {#if selectedEdge.label}
       <div class="field">
         <div class="field-label">Label</div>
         <span>{selectedEdge.label}</span>
       </div>
-    {/if}
+    {/if} -->
 
     {#each Object.entries(selectedEdge.data ?? {}) as [key, value]}
       <div class="field">

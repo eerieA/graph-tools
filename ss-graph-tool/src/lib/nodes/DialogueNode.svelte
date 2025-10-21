@@ -1,26 +1,30 @@
 <!-- This file holds the ui model for a dialogue node, which is different than the one in dialogueTypes.ts -->
 <script lang="ts">
-  import { Handle, Position, type NodeProps } from '@xyflow/svelte'
+  import { Handle, Position, type NodeProps } from '@xyflow/svelte';
 
   // Props expected from Svelte Flow
-  export let id: string
+  export let id: string;
   export let data: {
-    name: string
-    speaker?: string
-    text: string
-    conditions_in?: string[]
-    events_out?: string[]
-    choices?: string[]
-    next_node?: string
-    tags?: string[]
-    isEntry?: boolean
-  }
-  export let selected: boolean = false
+    name: string;
+    speaker?: string;
+    text: string;
+    conditions_in?: string[];
+    events_out?: string[];
+    choices?: string[];
+    next_node?: string;
+    tags?: string[];
+    // auxiliary info, calculated
+    isEntry?: boolean;
+    outgoingCount: number;
+  };
+  export let selected: boolean = false;
+
+  const numOutputs = data.outgoingCount ?? 1;
 </script>
 
 <div class="dialogue-node {selected ? 'selected' : ''} {data.isEntry ? 'entry' : ''}">
   <!-- Incoming connection point -->
-  <Handle type="target" position={Position.Top} />
+  <Handle id="handle-in-0" type="target" position={Position.Top} />
 
   <!-- name, speaker and dialogue preview -->
   <div class="name">{data.name ?? '???'}</div>
@@ -54,7 +58,17 @@
   </div>
 
   <!-- Outgoing connection point -->
-  <Handle type="source" position={Position.Bottom} />
+  <!-- multiple output handles -->
+  {#each Array(numOutputs)
+    .fill(0)
+    .map((_, i) => i) as i}
+    <Handle
+      id={`handle-out-${i}`}
+      type="source"
+      position={Position.Bottom}
+      style="left: {20 + i * 20}px"
+    />
+  {/each}
 </div>
 
 <style>
@@ -66,14 +80,16 @@
     color: #eee;
     font-family: system-ui, sans-serif;
     font-size: 12px;
-    width: 160px;           /* fixed width for consistency */
-    word-wrap: break-word;  /* wrap text to next line */
+    width: 160px; /* fixed width for consistency */
+    word-wrap: break-word; /* wrap text to next line */
     overflow: hidden;
     white-space: normal;
     text-overflow: ellipsis;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     text-align: left;
-    transition: border 0.1s, background 0.1s;
+    transition:
+      border 0.1s,
+      background 0.1s;
   }
 
   .dialogue-node.selected {
@@ -102,7 +118,7 @@
     font-size: 12px;
     color: #ddd;
     line-height: 1.3em;
-    max-height: 2.8em;  /* pair with word-wrap option to cut off texts; ~1.4 em per line so e.g. 2.8em limits it to 2 lines. */
+    max-height: 2.8em; /* pair with word-wrap option to cut off texts; ~1.4 em per line so e.g. 2.8em limits it to 2 lines. */
     overflow: hidden;
   }
 
