@@ -125,10 +125,11 @@ And I want to talk to that alchemist. Can you tell me the name again?`,
     id: '6302',
     name: 'Get info mysterious',
     speaker: 'squirrel',
-    text: `{{if ConversationInstance.bumped_fed_squirrel == F}}(A strange squirrel appeared outside the open window, with something in its claws.)
-Eeeeek! (The squirrel squeaked cheerfully.)
-(The squirrel left a mini scroll. The loose end reveals a part of some note: 'Thomas the Alc'.)
-(Unrolling it further, there is '...hemist is dead'.)`,
+    text: `{{if ConversationInstance.bumped_fed_squirrel == F}
+    (A strange squirrel appeared outside the open window, with something in its claws.)}
+    Eeeeek! (The squirrel squeaked cheerfully.)
+    (The squirrel left a mini scroll. The loose end reveals a part of some note: 'Thomas the Alc'.)
+    (Unrolling it further, there is '...hemist is dead'.)`,
     conditions_in: [],
     events_out: [],
     choices: [],
@@ -140,8 +141,9 @@ Eeeeek! (The squirrel squeaked cheerfully.)
     id: 'end',
     name: 'End 1: go to London',
     speaker: 'Protagonist',
-    text: `{{if DialogueSequence.nodeVisited(6302) == T}I'd better be careful if his shop is open then.}
-Thanks. Time to go to London.`,
+    text: `{{if DialogueSequence.nodeVisited(6302) == T}
+    I'd better be careful if his shop is open then.}
+    Thanks. Time to go to London.`,
     conditions_in: [],
     events_out: [
       `ConversationInstance.path_reaches_end = T`,

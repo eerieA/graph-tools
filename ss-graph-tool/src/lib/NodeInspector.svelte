@@ -68,6 +68,7 @@
     display: block;
     font-size: 16px;
     color: #ddd;
+    white-space: pre-wrap; /* preserves newlines and wraps long lines */
     word-break: break-word;
     padding-left: 8px; /* slight indentation for readability */
   }
