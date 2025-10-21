@@ -38,6 +38,8 @@
     padding: 12px;
     font-family: system-ui;
     overflow-y: auto;
+    height: 100%; /* same height as parent flex container */
+    box-sizing: border-box; /* padding won’t add to total height */
   }
 
   h3 {

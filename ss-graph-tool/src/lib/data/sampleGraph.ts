@@ -41,7 +41,7 @@ Oh he is on purple fire again... It will die out by itself very soon though.`,
     name: 'Get rare recipe',
     speaker: 'Eric',
     text: `Thanks [protagonist_name]! I don't have to buy new workwear again.
-Here, I got this recipe from my regular Alchemist from London. I don't
+Here, I got this recipe from my regular, an Alchemist from London. I don't
 know how to use it anyway!`,
     conditions_in: [],
     events_out: [],
@@ -123,7 +123,7 @@ And I want to talk to that alchemist. Can you tell me the name again?`,
 
   {
     id: '6302',
-    name: 'Get info mysterious',
+    name: 'Get info 2 mysterious',
     speaker: 'squirrel',
     text: `{{if ConversationInstance.bumped_fed_squirrel == F}
     (A strange squirrel appeared outside the open window, with something in its claws.)}
