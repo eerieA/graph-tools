@@ -64,13 +64,13 @@
 
 # Theoretical Test scenarios 1st draft (super rough)
 
-- A short fragment of a story dialogue, with simple choices, branches and world state change. Displays ui.
-- A short quest setting of player drugging a target, where guards heard the player once, triggers randomized bark, then cools down. No ui.
-- A short fragment of surrounding bark for player internal dialogues, like that in Disco Elysium. Displays ui.
-- A short fragment of simple Npc dialogue, with few choices but one moment where surrounding bark is triggered and audible, the npc hears it and responds, but the player don’t have choices for this npc response. No ui.
-- A short encounter of passing an npc, triggers a conditional character bark, and then a surrounding bark, which overlaps with the npc character bark partially, demonstrating channel priorities. And the Npc continues other few character barks like about their daily routines. No ui.
-- A short fragment of set piece gameplay, where npc and surrounding barks overlap, but surrounding barks are not audible. No ui.
-- A short encounter of npc character barks where npc exchange greetings? Very small character bark node graphs? No ui.
+1. A short fragment of a story dialogue, with simple choices, branches and world state change. Displays ui.
+1. A short quest setting of player drugging a target, where guards heard the player once, triggers randomized bark, then cools down. No ui.
+1. A short fragment of surrounding bark for player internal dialogues, like that in Disco Elysium. Displays ui.
+1. A short fragment of simple Npc dialogue, with few choices but one moment where surrounding bark is triggered and audible, the npc hears it and responds, but the player don’t have choices for this npc response. No ui.
+1. A short encounter of passing an npc, triggers a conditional character bark, and then a surrounding bark, which overlaps with the npc character bark partially, demonstrating channel priorities. And the Npc continues other few character barks like about their daily routines. No ui.
+1. A short fragment of set piece gameplay, where npc and surrounding barks overlap, but surrounding barks are not audible. No ui.
+1. A short encounter of npc character barks where npc exchange greetings? Very small character bark node graphs? No ui.
 
 # Theoretical Test Scenarios (better)
 
