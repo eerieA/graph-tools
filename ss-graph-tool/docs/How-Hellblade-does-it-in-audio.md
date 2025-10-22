@@ -1,13 +1,6 @@
 # How Hellblade does it in audio
 
-aspect: audio, design
-Created: October 6, 2025
-Edited: October 21, 2025 12:38 AM
-Archive: No
-Favorite: No
-Status: Inbox
-Notebooks: Braining (https://www.notion.so/Braining-2938c0fd063d81299133c3d4f969872f?pvs=21)
-Pin: No
+Some references and notes on how Hellblade did their audio for presenting the inner voices.
 
 ## GDC talk from Hellblade dev
 
@@ -20,6 +13,8 @@ There is a clip as reference from 00:46:30. It is also a demonstration of the in
 So generally I think the project owner referred to Hellblade in the hope that this technique can be used to create “stream of consciousness” narrative effect for the schizophrenia-carrying protagonist of his game.
 
 ## Audio design interview with Gamradar
+
+https://www.gamesradar.com/ninja-theory-hellblade-senuas-sacrifice-psychosis-interview/
 
 They mentioned
 
